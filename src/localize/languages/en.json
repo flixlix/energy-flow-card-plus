@@ -1,0 +1,55 @@
+{
+  "common": {
+    "version": "Version",
+    "invalid_configuration": "Invalid configuration",
+    "show_warning": "Show Warning",
+    "entity_not_found": "Entity state not found",
+    "missing_child": "Missing child entity",
+    "loading": "Loading..."
+  },
+  "editor": {
+    "yaml_disclaimer": "Please use yaml mode for the other options",
+    "docs": "Documentation",
+    "sections": "Sections",
+    "section": "Section",
+    "add_section": "+ Add section",
+    "add_entity": "+ Add entity",
+    "entity_editor": "Entity editor",
+    "decimals": "decimals",
+    "fields": {
+      "autoconfig": "Autoconfig",
+      "print_yaml": "Print auto generated config yaml",
+      "show_names": "Show names",
+      "show_icons": "Show icons",
+      "show_states": "Show states",
+      "show_units": "Show units",
+      "energy_date_selection": "Sync with energy_date_selection component",
+      "height": "Height",
+      "wide": "Wide",
+      "min_box_height": "Min box height",
+      "min_box_distance": "Min box distance",
+      "min_state": "Min state",
+      "round": "Round",
+      "throttle": "Throttle",
+      "unit_prefix": "Unit prefix",
+      "entity": "Entity",
+      "type": "Type",
+      "children": "Children",
+      "name": "Name",
+      "icon": "Icon",
+      "color": "Color",
+      "unit_of_measurement": "Unit of measurement",
+      "tap_action": "Tap action",
+      "color_on_state": "Change color based on state",
+      "color_limit": "State limit for color change",
+      "color_above": "Color above limit",
+      "color_below": "Color below limit"
+    },
+    "entity_types": {
+      "entity": "Entity",
+      "remaining_parent_state": "Remaining parent state",
+      "remaining_child_state": "Remaining child state",
+      "passthrough": "Passthrough"
+    }
+  }
+}
