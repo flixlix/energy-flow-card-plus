@@ -5,15 +5,16 @@ interface mainConfigOptions {
   dashboard_link?: string;
   dashboard_link_label?: string;
   inverted_entities?: string | string[];
-  kw_decimals?: number;
+  kwh_decimals?: number;
   min_flow_rate?: number;
   max_flow_rate?: number;
-  w_decimals?: number;
-  watt_threshold?: number;
+  wh_decimals?: number;
+  wh_kwh_threshold?: number;
   clickable_entities?: boolean;
   max_expected_power?: number;
   min_expected_power?: number;
   display_zero_lines?: boolean;
+  energy_date_selection?: boolean;
 }
 export interface EnergyFlowCardPlusConfig extends LovelaceCardConfig, mainConfigOptions {
   entities: {

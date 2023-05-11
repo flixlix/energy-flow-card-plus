@@ -4,12 +4,11 @@ import { EnergyFlowCardPlusConfig } from '../energy-flow-card-plus-config';
 export const defaultValues = {
   maxFlowRate: 6,
   minFlowRate: 1,
-  wattDecimals: 0,
-  kilowattDecimals: 1,
+  watthourDecimals: 0,
+  kilowatthourDecimals: 1,
   minExpectedEnergy: 10,
   maxExpectedEnergy: 2000,
-  wattThreshold: 1000,
-
+  whkWhThreshold: 1000,
 };
 
 export function getDefaultConfig(hass: HomeAssistant): EnergyFlowCardPlusConfig {
@@ -52,12 +51,12 @@ export function getDefaultConfig(hass: HomeAssistant): EnergyFlowCardPlusConfig 
     display_zero_lines: true,
     use_new_flow_rate_model: true,
     energy_date_selection: true,
-    w_decimals: defaultValues.wattDecimals,
-    kw_decimals: defaultValues.kilowattDecimals,
+    wh_decimals: defaultValues.watthourDecimals,
+    kwh_decimals: defaultValues.kilowatthourDecimals,
     min_flow_rate: defaultValues.minFlowRate,
     max_flow_rate: defaultValues.maxFlowRate,
     max_expected_energy: defaultValues.maxExpectedEnergy,
     min_expected_energy: defaultValues.minExpectedEnergy,
-    watt_threshold: defaultValues.wattThreshold,
+    wh_kwh_threshold: defaultValues.whkWhThreshold,
   };
 }

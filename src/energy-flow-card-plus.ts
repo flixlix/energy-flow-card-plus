@@ -42,7 +42,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
   @state() private error?: Error | unknown;
 
   public hassSubscribe() {
-    if (this._config.energy_date_selection === false) {
+    if (this._config?.energy_date_selection === false) {
       return [];
     }
     const start = Date.now();
@@ -98,11 +98,11 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     this._config = {
       ...config,
       inverted_entities: coerceStringArray(config.inverted_entities, ','),
-      kw_decimals: coerceNumber(config.kw_decimals, defaultValues.kilowattDecimals),
+      kwh_decimals: coerceNumber(config.kwh_decimals, defaultValues.kilowatthourDecimals),
       min_flow_rate: coerceNumber(config.min_flow_rate, defaultValues.minFlowRate),
       max_flow_rate: coerceNumber(config.max_flow_rate, defaultValues.maxFlowRate),
-      w_decimals: coerceNumber(config.w_decimals, defaultValues.wattDecimals),
-      watt_threshold: coerceNumber(config.watt_threshold, defaultValues.wattThreshold),
+      wh_decimals: coerceNumber(config.wh_decimals, defaultValues.watthourDecimals),
+      wh_kwh_threshold: coerceNumber(config.wh_kwh_threshold, defaultValues.whkWhThreshold),
       max_expected_energy: coerceNumber(config.max_expected_energy, defaultValues.maxExpectedEnergy),
       min_expected_energy: coerceNumber(config.min_expected_energy, defaultValues.minExpectedEnergy),
     };
@@ -234,9 +234,9 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     if (value === null) return '0';
     if (Number.isNaN(+value)) return value;
     const valueInNumber = Number(value);
-    const isKW = unit === undefined && valueInNumber >= this._config!.watt_threshold;
+    const isKW = unit === undefined && valueInNumber >= this._config!.wh_kwh_threshold;
     const v = formatNumber(
-      isKW ? round(valueInNumber / 1000, this._config!.kw_decimals) : round(valueInNumber, this._config!.w_decimals),
+      isKW ? round(valueInNumber / 1000, this._config!.kwh_decimals) : round(valueInNumber, this._config!.wh_decimals),
       this.hass.locale,
     );
     return `${v}${unitWhiteSpace === false ? '' : ' '}${unit || (isKW ? 'kWh' : 'Wh')}`;
