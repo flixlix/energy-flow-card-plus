@@ -5,7 +5,7 @@
 [![ko-fi support](https://img.shields.io/badge/support-me-ff5e5b?style=flat-square&logo=ko-fi)](https://ko-fi.com/flixlix)
 ![commit_activity](https://img.shields.io/github/commit-activity/y/flixlix/energy-flow-card-plus?color=brightgreen&label=Commits&style=flat-square)
 
-![demo_energy_flow_card_plus](https://github.com/flixlix/energy-flow-card-plus/assets/61006057/b1ae60f5-14df-45a1-8017-441ef6433656)
+![demo_energy_flow_card_plus](https://github.com/flixlix/energy-flow-card-plus/assets/61006057/d3650e8a-1c82-4993-9951-18c04fbdf4d6)
 
 
 ## Goal
