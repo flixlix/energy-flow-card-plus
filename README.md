@@ -78,11 +78,11 @@ Else, if you prefer the graphical editor, use the menu to add the resource:
 | energy_date_selection | `boolean` | true | If set to `true`, will follow the energy date picker (that is in the same dashboard) and get entities information from the statistics. |
 | dashboard_link      | `string`  |              | Shows a link to an Energy Dashboard. Should be a url path to location of your choice. If you wanted to link to the built-in dashboard you would enter `/energy` for example. |
 | inverted_entities   | `string`  |              | Comma seperated list of entities that should be inverted (negative for consumption and positive for production). Example: `inverted_entities: battery, grid`           |
-| kw_decimals         | `number`  |      1       | Number of decimals rounded to when kilowatts are displayed.                                                                                                                  |
-| w_decimals          | `number`  |      1       | Number of decimals rounded to when watts are displayed.                                                                                                                      |
+| kwh_decimals         | `number`  |      1       | Number of decimals rounded to when kilowatts are displayed.                                                                                                                  |
+| wh_decimals          | `number`  |      1       | Number of decimals rounded to when watts are displayed.                                                                                                                      |
 | min_flow_rate       | `number`  |     .75      | Represents how much time it takes for the quickest dot to travel from one end to the other in seconds. |
 | max_flow_rate       | `number`  |      6       | Represents how much time it takes for the slowest dot to travel from one end to the other in seconds. |
-| watt_threshold      | `number`  |      0       | The number of watts to display before converting to and displaying kilowatts. Setting of 0 will always display in kilowatts. |
+| wh_kwh_threshold      | `number`  |      1000       | The number of watts to display before converting to and displaying kilowatthours. Setting of 0 will always display in kilowatthours. |
 | clickable_entities  | `boolean` |    false     | If true, clicking on the entity will open the entity's more info dialog. |
 | min_expected_energy | `number`  |    0.01 | Represents the minimum amount of energy (in Watthours) expected to flow through the system at a given moment. Only used in the [New Flow Formula](#new-flow-formula). |
 | max_expected_energy | `number`  | 2000 | Represents the maximum amount of energy (in Watthours) expected to flow through the system at a given moment. Only used in the [New Flow Formula](#new-flow-formula). |
