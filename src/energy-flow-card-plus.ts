@@ -194,7 +194,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       return 'NaN';
     }
     const unitWhiteSpace = this._config!.entities.fossil_fuel_percentage?.unit_white_space ?? true;
-    const unitOfMeasurement: 'W' | '%' = this._config!.entities.fossil_fuel_percentage?.state_type === 'percentage' ? '%' : 'W' || 'W';
+    const unitOfMeasurement: 'Wh' | '%' = this._config!.entities.fossil_fuel_percentage?.state_type === 'percentage' ? '%' : 'Wh' || 'Wh';
     const nonFossilFuelDecimal: number = 1 - this.getEntityState(entityFossil) / 100;
     let gridConsumption: number;
     if (typeof this._config!.entities.grid!.entity === 'string') {
@@ -206,14 +206,14 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     /* based on choice, change output from watts to % */
     let result: string | number;
     const displayZeroTolerance = this._config.entities.fossil_fuel_percentage?.display_zero_tolerance ?? 0;
-    if (unitOfMeasurement === 'W') {
+    if (unitOfMeasurement === 'Wh') {
       let nonFossilFuelWatts = gridConsumption * nonFossilFuelDecimal;
       if (displayZeroTolerance) {
         if (nonFossilFuelWatts < displayZeroTolerance) {
           nonFossilFuelWatts = 0;
         }
       }
-      result = this.displayValue(nonFossilFuelWatts, 'W', unitWhiteSpace);
+      result = this.displayValue(nonFossilFuelWatts, 'Wh', unitWhiteSpace);
     } else {
       let nonFossilFuelPercentage: number = 100 - this.getEntityState(entityFossil);
       if (displayZeroTolerance) {
