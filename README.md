@@ -35,7 +35,7 @@ To install this:
 - In "Category", select `lovelace`
 - Install via UI
 
-### Manual install
+<details>  <summary>#Manual Install</summary>
 
 1. Download and copy `energy-flow-card-plus.js` from the [latest release](https://github.com/flixlix/energy-flow-card-plus/releases/latest) into your `config/www` directory.
 
@@ -60,6 +60,8 @@ Else, if you prefer the graphical editor, use the menu to add the resource:
 5. Hit (+ ADD RESOURCE) icon
 6. Enter URL `/local/energy-flow-card-plus.js` and select type "JavaScript Module".
    (Use `/hacsfiles/energy-flow-card-plus/energy-flow-card-plus.js` and select "JavaScript Module" for HACS install if HACS didn't do it already)
+ 
+</details>
    
 ## Using the card
 
