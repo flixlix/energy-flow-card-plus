@@ -88,7 +88,6 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     ];
   }
 
-  // https://lit.dev/docs/components/properties/#accessors-custom
   public setConfig(config: EnergyFlowCardPlusConfig): void {
     if (typeof config !== 'object') {
       throw new Error(localize('common.invalid_configuration'));
@@ -130,9 +129,19 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
   private unavailableOrMisconfiguredError = (entityId: string | undefined) =>
     logError(`Entity "${entityId ?? 'Unknown'}" is not available or misconfigured`);
 
-  private entityExists = (entityId: string): boolean => entityId in this.hass.states;
+  private entityExists = (entityId: string): boolean => {
+    if (this._config?.energy_date_selection) {
+      return entityId in this.states;
+    }
+    return entityId in this.hass.states;
+  };
 
-  private entityAvailable = (entityId: string): boolean => isNumberValue(this.hass.states[entityId]?.state);
+  private entityAvailable = (entityId: string): boolean => {
+    if (this._config?.energy_date_selection) {
+      return isNumberValue(this.states[entityId]?.state);
+    }
+    return isNumberValue(this.hass.states[entityId]?.state);
+  };
 
   private entityInverted = (entityType: EntityType) => this._config!.inverted_entities.includes(entityType);
 
@@ -204,7 +213,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return `${v}${unitWhiteSpace === false ? '' : ' '}${unit || (isKWh ? 'kWh' : 'Wh')}`;
   };
 
-  private displayNonFossilState = (entityFossil: string, totalFromGrid: number): string | number => {
+  private displayNonFossilState = (entityFossil: string): string | number => {
     if (!entityFossil || !this.entityAvailable(entityFossil)) {
       this.unavailableOrMisconfiguredError(entityFossil);
       return 'NaN';
@@ -218,13 +227,13 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     let result: string | number;
     const displayZeroTolerance = this._config.entities.fossil_fuel_percentage?.display_zero_tolerance ?? 0;
     if (this._config.entities.fossil_fuel_percentage.state_type !== 'percentage') {
-      let nonFossilFuelWatts = gridConsumption * nonFossilFuelDecimal;
+      let nonFossilFuelWatthours = gridConsumption * nonFossilFuelDecimal;
       if (displayZeroTolerance) {
-        if (nonFossilFuelWatts < displayZeroTolerance) {
-          nonFossilFuelWatts = 0;
+        if (nonFossilFuelWatthours < displayZeroTolerance) {
+          nonFossilFuelWatthours = 0;
         }
       }
-      result = this.displayValue(nonFossilFuelWatts);
+      result = this.displayValue(nonFossilFuelWatthours);
     } else {
       let nonFossilFuelPercentage: number = 100 - this.getEntityState(entityFossil);
       if (displayZeroTolerance) {
@@ -364,8 +373,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       totalToGrid = totalToGrid! > this._config.entities.grid?.display_zero_tolerance ? totalToGrid : 0;
     }
 
-    const mainGridEntity: undefined | string =
-      typeof entities.grid?.entity === 'object' ? entities.grid.entity.consumption || entities.grid.entity.production : entities.grid?.entity;
+    const mainGridEntity: undefined | string = entities.grid.entity?.consumption || entities.grid.entity?.production;
 
     const gridIcon: string = !isGridPowerOutage
       ? entities.grid?.icon || (entities.grid?.use_metadata && this.getEntityStateObj(mainGridEntity)?.attributes.icon) || 'mdi:transmission-tower'
@@ -583,8 +591,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       this.style.setProperty('--energy-battery-in-color', batteryProductionColor || '#a280db');
     }
 
-    const mainBatteryEntity: undefined | string =
-      typeof entities.battery?.entity === 'object' ? entities.battery.entity.consumption : entities.battery?.entity;
+    const mainBatteryEntity: undefined | string = entities.battery.entity?.consumption || entities.battery?.entity?.production;
 
     const batteryName: string =
       entities.battery?.name ||
@@ -675,44 +682,6 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
 
     let nonFossilFuelenergy: number | undefined;
     let homeNonFossilCircumference = 0;
-
-    let lowCarbonEnergy: number | undefined;
-
-    let homeLowCarbonCircumference: number | undefined;
-    let homeHighCarbonCircumference: number | undefined;
-
-    // This fallback is used in the demo
-    let electricityMapUrl = 'https://app.electricitymap.org';
-
-    if (this.states.co2SignalEntity && this.states.fossilEnergyConsumption) {
-      // Calculate high carbon consumption
-      const highCarbonEnergy = Object.values(this.states.fossilEnergyConsumption)
-        .map(a => (typeof a === 'number' ? a : 0)) // Convert non-number values to 0
-        .reduce((sum, a) => sum + a, 0);
-
-      const co2State = this.hass.states[this.states.co2SignalEntity.entity_id];
-
-      if (co2State?.attributes.country_code) {
-        electricityMapUrl += `/zone/${co2State.attributes.country_code}`;
-      }
-
-      if (highCarbonEnergy !== null) {
-        lowCarbonEnergy = totalFromGrid - highCarbonEnergy;
-
-        let highCarbonConsumption: number;
-        if (gridConsumption !== totalFromGrid) {
-          // Only get the part that was used for consumption and not the battery
-          highCarbonConsumption = highCarbonEnergy * (gridConsumption / totalFromGrid);
-        } else {
-          highCarbonConsumption = highCarbonEnergy;
-        }
-
-        homeHighCarbonCircumference = circleCircumference * (highCarbonConsumption / totalHomeConsumption);
-
-        homeLowCarbonCircumference =
-          circleCircumference - (homeSolarCircumference || 0) - (homeBatteryCircumference || 0) - homeHighCarbonCircumference;
-      }
-    }
 
     if (hasNonFossilFuelUsage) {
       const nonFossilFuelDecimal: number = 1 - this.getEntityState(entities.fossil_fuel_percentage?.entity) / 100;
@@ -894,6 +863,17 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       this._config.entities.home?.secondary_info?.color_value ? 'var(--text-home-color)' : 'var(--primary-text-color)',
     );
 
+    const homeState = this.getEntityStateWatthours(entities.home?.entity);
+
+    const homeStateDisplay =
+      entities.home?.override_state && entities.home.entity
+        ? entities.home?.subtract_individual
+          ? this.displayValue(homeState - totalIndividualConsumption)
+          : this.displayValue(homeState)
+        : entities.home?.subtract_individual
+        ? this.displayValue(totalHomeConsumption - totalIndividualConsumption || 0)
+        : this.displayValue(totalHomeConsumption);
+
     return html`
       <ha-card .header=${this._config.title}>
         <div class="card-content">
@@ -956,9 +936,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                         ></ha-icon>
                         ${entities.fossil_fuel_percentage?.display_zero_state !== false ||
                         (nonFossilFuelenergy || 0) > (entities.fossil_fuel_percentage?.display_zero_tolerance || 0)
-                          ? html`
-                              <span class="low-carbon">${this.displayNonFossilState(entities!.fossil_fuel_percentage!.entity, totalFromGrid)}</span>
-                            `
+                          ? html` <span class="low-carbon">${this.displayNonFossilState(entities!.fossil_fuel_percentage?.entity)}</span> `
                           : ''}
                       </div>
                       ${this.showLine(nonFossilFuelenergy || 0)
@@ -972,7 +950,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                               vector-effect="non-scaling-stroke"
                             >
                                 <animateMotion
-                                  dur="${this.additionalCircleRate(entities.fossil_fuel_percentage?.calculate_flow_rate, newDur.nonFossil)}s"
+                                  dur="${this.additionalCircleRate(entities.fossil_fuel_percentage?.calculate_flow_rate, newDur.nonFossil) || 0}s"
                                   repeatCount="indefinite"
                                   calcMode="linear"
                                 >
@@ -1344,13 +1322,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                     `
                   : ''}
                 <ha-icon .icon=${homeIcon}></ha-icon>
-                ${this._config.entities.home?.override_state && this._config.entities.home.entity
-                  ? entities.home?.subtract_individual
-                    ? this.displayValue(Number(this.hass.states[this._config.entities.home!.entity].state) - totalIndividualConsumption)
-                    : this.displayValue(this.hass.states[this._config.entities.home!.entity].state)
-                  : this._config.entities.home?.subtract_individual
-                  ? this.displayValue(totalHomeConsumption - totalIndividualConsumption || 0)
-                  : this.displayValue(totalHomeConsumption)}
+                ${homeStateDisplay}
                 <svg>
                   ${homeSolarCircumference !== undefined
                     ? svg`<circle
