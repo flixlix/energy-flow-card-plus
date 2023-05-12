@@ -16,7 +16,7 @@ The goal is to deliver a card that fits in the overall design of the Energy Dash
 
 ## Scope
 
-This card **does not** aim to display Power Values (Meaning instantaneous/current consumption).
+This card **does not** aim to display Values (Meaning instantaneous/current consumption).
 If this is your goal, check out the [Power Flow Card Plus](https://github.com/flixlix/power-flow-card-plus).
 
 ## Install
@@ -80,11 +80,11 @@ Else, if you prefer the graphical editor, use the menu to add the resource:
 | energy_date_selection | `boolean` | true | If set to `true`, will follow the energy date picker (that is in the same dashboard) and get entities information from the statistics. |
 | dashboard_link      | `string`  |              | Shows a link to an Energy Dashboard. Should be a url path to location of your choice. If you wanted to link to the built-in dashboard you would enter `/energy` for example. |
 | inverted_entities   | `string`  |              | Comma seperated list of entities that should be inverted (negative for consumption and positive for production). Example: `inverted_entities: battery, grid`           |
-| kwh_decimals         | `number`  |      1       | Number of decimals rounded to when kilowatts are displayed.                                                                                                                  |
-| wh_decimals          | `number`  |      1       | Number of decimals rounded to when watts are displayed.                                                                                                                      |
+| kwh_decimals         | `number`  |      1       | Number of decimals rounded to when kilowatthours are displayed.                                                                                                                  |
+| wh_decimals          | `number`  |      1       | Number of decimals rounded to when watthours are displayed.                                                                                                                      |
 | min_flow_rate       | `number`  |     .75      | Represents how much time it takes for the quickest dot to travel from one end to the other in seconds. |
 | max_flow_rate       | `number`  |      6       | Represents how much time it takes for the slowest dot to travel from one end to the other in seconds. |
-| wh_kwh_threshold      | `number`  |      1000       | The number of watts to display before converting to and displaying kilowatthours. Setting of 0 will always display in kilowatthours. |
+| wh_kwh_threshold      | `number`  |      1000       | The number of watthours to display before converting to and displaying kilowatthours. Setting of 0 will always display in kilowatthours. |
 | clickable_entities  | `boolean` |    false     | If true, clicking on the entity will open the entity's more info dialog. |
 | min_expected_energy | `number`  |    0.01 | Represents the minimum amount of energy (in Watthours) expected to flow through the system at a given moment. Only used in the [New Flow Formula](#new-flow-formula). |
 | max_expected_energy | `number`  | 2000 | Represents the maximum amount of energy (in Watthours) expected to flow through the system at a given moment. Only used in the [New Flow Formula](#new-flow-formula). |
@@ -169,6 +169,21 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 | secondary_info | `object` | `undefined` | Check [Secondary Info Object](#secondary-info-configuration) |
 | subtract_individual | `boolean` | false | If set to `true`, the home consumption will be calculated by subtracting the sum of the individual devices from the home consumption. |
 | override_state | `boolean` | `false` | If set to `true`, the home consumption will be the state of the entity provided. By default the home consumption is caluclated by adding up all sources. This is useful, when for example you are using an inverter and it has energy losses. |
+
+#### Fossil Fuel Configuration
+
+| Name        | Type    | Default  | Description                                                                                       |
+| ----------- | ------- | -------- | ------------------------------------------------------------------------------------------------- |
+| entity           | `string` | `none` required | Entity ID providing a state with the value of the percentage of fossil fuel consumption. The state should be `100` when all the energy from the grid comes from high emission sources and `0` when all the energy from the grid comes from low emission sources. It is recommended to use the CO2 Signal integration, which provides this sensor out of the box without any additional templating. This will also be the entity used in the more-info dialogs. |
+| name        | `string` | Low-carbon | Name to appear as a label on top of the circle. |
+| icon | `string`            | `mdi:leaf` | Icon path (eg: `mdi:home`) to display inside the circle of the device. |
+| color          | `string`        | `#0f9d58` |  HEX Value of a color to display as the stroke of the circle and line connecting to the grid. |
+| color_icon | `boolean` | `false` | If `true`, the icon will be colored with the color property. Otherwise it will be the same color as all other icons. |
+| display_zero | `boolean` | `true` | If set to `true`, the device will be displayed even if the entity state is `0` or not a number (eg: `unavailable`). Otherwise, the non-fossil section will be hidden. |
+| display_zero_state | `boolean` | `true` | If set to `true`, the state will be shown even if it is `0`. If set to `false`, the state will be hidden if it is `0`. |
+| state_type | `string` | `energy` | The type of state to use for the entity. Can be `energy` or `percentage`. When set to `energy` the state will be the amount of energy from the grid that is low-carbon. When set to `percentage` the state will be the percentage of energy from the grid that is low-carbon. |
+| unit_white_space | `boolean` | `true` | If set to `false` will not add any whitespace between unit and state. Otherwise, white space will be added. |
+| calculate_flow_rate | `boolean` or `number` | `false` | If set to `true`, the flow rate will be calculated by using the flow rate formula (either the new or the old one, depending on your configuration). If set to a number, the flow rate will be set to that number. For example, defining the value `10` will ensure one dot will flow every 10 seconds. |
 
 #### Color Object
 
@@ -290,17 +305,17 @@ return ((value  -  minIn) * (maxOut  -  minOut)) / (maxIn  -  minIn) +  minOut;
 
 // value = value of the current line to calculate (eg: grid to home)
 //
-// minIn = amount of watts at which the lowest speed will be selected. 
+// minIn = amount of watthours at which the lowest speed will be selected. 
 //   ↳ In your configuration this is `min_expected_energy`
-//   ↳ eg: setting this at `100` means that at `100` watts, the dots will still flow at the lowest speed
-// maxIn = amount of watts at which the highest speed will be selected. 
+//   ↳ eg: setting this at `100` means that at `100` watthours, the dots will still flow at the lowest speed
+// maxIn = amount of watthours at which the highest speed will be selected. 
 //   ↳ In your configuration this is `max_expected_energy`
 //   ↳ eg: setting this at `2000` means that everything more than `2000` will flow at the highest speed selected
 //
-// minOut = amount of watts at which the lowest speed will be selected. 
+// minOut = amount of watthours at which the lowest speed will be selected. 
 //   ↳ In your configuration this is `max_flow_rate`
 //   ↳ eg: setting this at `5` means that one dot will take `5` second to travel
-// maxOut = amount of watts at which the highest speed will be selected. 
+// maxOut = amount of watthours at which the highest speed will be selected. 
 //   ↳ In your configuration this is `min_flow_rate`
 //   ↳ eg: setting this at `1` means that one dot will take `1` second to travel
 ```
