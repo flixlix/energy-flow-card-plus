@@ -35,7 +35,7 @@ To install this:
 - In "Category", select `lovelace`
 - Install via UI
 
-<details>  <summary>#Manual Install</summary>
+<details>  <summary>Manual Install</summary>
 
 1. Download and copy `energy-flow-card-plus.js` from the [latest release](https://github.com/flixlix/energy-flow-card-plus/releases/latest) into your `config/www` directory.
 
