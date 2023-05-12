@@ -4,8 +4,8 @@ import { EnergyFlowCardPlusConfig } from '../energy-flow-card-plus-config';
 export const defaultValues = {
   maxFlowRate: 6,
   minFlowRate: 1,
-  watthourDecimals: 0,
-  kilowatthourDecimals: 1,
+  watthourDecimals: 1,
+  kilowatthourDecimals: 0,
   minExpectedEnergy: 10,
   maxExpectedEnergy: 2000,
   whkWhThreshold: 1000,

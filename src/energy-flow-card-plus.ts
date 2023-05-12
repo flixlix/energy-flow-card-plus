@@ -22,7 +22,7 @@ registerCustomCard({
   description: 'A custom card for displaying energy flow in Home Assistant. Inspired by the official Energy Distribution Card.',
 });
 
-const ENERGY_DATA_TIMEOUT = 10000;
+const energyDataTimeout = 10000;
 const circleCircumference = 238.76104;
 
 @customElement('energy-flow-card-plus')
@@ -53,7 +53,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       const energyCollection = getEnergyDataCollection(this.hass);
       if (energyCollection) {
         resolve(energyCollection);
-      } else if (Date.now() - start > ENERGY_DATA_TIMEOUT) {
+      } else if (Date.now() - start > energyDataTimeout) {
         console.debug(getEnergyDataCollection(this.hass));
         reject(new Error('No energy data received. Make sure to add a `type: energy-date-selection` card to this screen.'));
       } else {
@@ -66,7 +66,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         this.error = new Error('Something went wrong. No energy data received.');
         console.debug(getEnergyDataCollection(this.hass));
       }
-    }, ENERGY_DATA_TIMEOUT * 2);
+    }, energyDataTimeout * 2);
     energyPromise.catch(err => {
       this.error = err;
     });
@@ -144,11 +144,14 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
   }
 
   private circleRate = (value: number, total: number): number => {
-    const maxenergy = this._config.max_expected_energy;
-    const minenergy = this._config.min_expected_energy;
     const maxRate = this._config.max_flow_rate;
     const minRate = this._config.min_flow_rate;
-    return this.mapRange(value, maxRate, minRate, minenergy, maxenergy);
+    if (this._config.use_new_flow_rate_model) {
+      const maxEnergy = this._config.max_expected_energy;
+      const minEnergy = this._config.min_expected_energy;
+      return this.mapRange(value, maxRate, minRate, minEnergy, maxEnergy);
+    }
+    return maxRate - (value / total) * (maxRate - minRate);
   };
 
   private getEntityStateObj = (entity: string | undefined): HassEntity | undefined => {
@@ -174,18 +177,31 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       this.unavailableOrMisconfiguredError(entity);
       return 0;
     }
-    return coerceNumber(this.hass.states[entity].state);
+    const stateObj = this._config?.energy_date_selection !== false ? this.states[entity] : this.hass?.states[entity];
+    return coerceNumber(stateObj.state);
   };
 
-  private getEntityStateWatts = (entity: string | undefined): number => {
+  private getEntityStateWatthours = (entity: string | undefined): number => {
     if (!entity || !this.entityAvailable(entity)) {
       this.unavailableOrMisconfiguredError(entity);
       return 0;
     }
-    const stateObj = this._config.energy_date_selection !== false ? this.states[entity] : this.hass?.states[entity];
+    const stateObj = this._config?.energy_date_selection !== false ? this.states[entity] : this.hass?.states[entity];
     const value = coerceNumber(stateObj?.state);
     if (stateObj?.attributes?.unit_of_measurement !== 'Wh') return value * 1000;
     return value;
+  };
+
+  private displayValue = (value: number | string | null, unit?: string | undefined, unitWhiteSpace?: boolean | undefined) => {
+    if (value === null) return '0';
+    if (Number.isNaN(+value)) return value;
+    const valueInNumber = Number(value);
+    const isKWh = unit === undefined && valueInNumber >= this._config!.wh_kwh_threshold;
+    const v = formatNumber(
+      isKWh ? round(valueInNumber / 1000, this._config!.kwh_decimals) : round(valueInNumber, this._config!.wh_decimals),
+      this.hass.locale,
+    );
+    return `${v}${unitWhiteSpace === false ? '' : ' '}${unit || (isKWh ? 'kWh' : 'Wh')}`;
   };
 
   private displayNonFossilState = (entityFossil: string, totalFromGrid: number): string | number => {
@@ -196,24 +212,19 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     const unitWhiteSpace = this._config!.entities.fossil_fuel_percentage?.unit_white_space ?? true;
     const unitOfMeasurement: 'Wh' | '%' = this._config!.entities.fossil_fuel_percentage?.state_type === 'percentage' ? '%' : 'Wh' || 'Wh';
     const nonFossilFuelDecimal: number = 1 - this.getEntityState(entityFossil) / 100;
-    let gridConsumption: number;
-    if (typeof this._config!.entities.grid!.entity === 'string') {
-      gridConsumption = totalFromGrid;
-    } else {
-      gridConsumption = this.getEntityStateWatts(this._config!.entities!.grid!.entity!.consumption) || 0;
-    }
+    const gridConsumption = this.getEntityStateWatthours(this._config!.entities!.grid!.entity!.consumption) || 0;
 
     /* based on choice, change output from watts to % */
     let result: string | number;
     const displayZeroTolerance = this._config.entities.fossil_fuel_percentage?.display_zero_tolerance ?? 0;
-    if (unitOfMeasurement === 'Wh') {
+    if (this._config.entities.fossil_fuel_percentage.state_type !== 'percentage') {
       let nonFossilFuelWatts = gridConsumption * nonFossilFuelDecimal;
       if (displayZeroTolerance) {
         if (nonFossilFuelWatts < displayZeroTolerance) {
           nonFossilFuelWatts = 0;
         }
       }
-      result = this.displayValue(nonFossilFuelWatts, 'Wh', unitWhiteSpace);
+      result = this.displayValue(nonFossilFuelWatts);
     } else {
       let nonFossilFuelPercentage: number = 100 - this.getEntityState(entityFossil);
       if (displayZeroTolerance) {
@@ -230,18 +241,6 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return result;
   };
 
-  private displayValue = (value: number | string | null, unit?: string | undefined, unitWhiteSpace?: boolean | undefined) => {
-    if (value === null) return '0';
-    if (Number.isNaN(+value)) return value;
-    const valueInNumber = Number(value);
-    const isKW = unit === undefined && valueInNumber >= this._config!.wh_kwh_threshold;
-    const v = formatNumber(
-      isKW ? round(valueInNumber / 1000, this._config!.kwh_decimals) : round(valueInNumber, this._config!.wh_decimals),
-      this.hass.locale,
-    );
-    return `${v}${unitWhiteSpace === false ? '' : ' '}${unit || (isKW ? 'kWh' : 'Wh')}`;
-  };
-
   private openDetails(entityId?: string | undefined): void {
     if (!entityId || !this._config.clickable_entities) return;
     /* also needs to open details if entity is unavailable, but not if entity doesn't exist is hass states */
@@ -256,7 +255,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
   private hasField(field?: any, acceptStringState?: boolean): boolean {
     return (
       (field !== undefined && field?.display_zero === true) ||
-      (this.getEntityStateWatts(field?.entity) > (field?.display_zero_tolerance ?? 0) && this.entityAvailable(field?.entity)) ||
+      (this.getEntityStateWatthours(field?.entity) > (field?.display_zero_tolerance ?? 0) && this.entityAvailable(field?.entity)) ||
       acceptStringState
         ? typeof this.hass.states[field?.entity]?.state === 'string'
         : false
@@ -318,12 +317,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     if (hasGrid) {
       if (typeof entities.grid!.entity === 'string') {
         if (this.entityInverted('grid')) {
-          totalFromGrid = Math.abs(Math.min(this.getEntityStateWatts(entities.grid?.entity), 0));
+          totalFromGrid = Math.abs(Math.min(this.getEntityStateWatthours(entities.grid?.entity), 0));
         } else {
-          totalFromGrid = Math.max(this.getEntityStateWatts(entities.grid?.entity), 0);
+          totalFromGrid = Math.max(this.getEntityStateWatthours(entities.grid?.entity), 0);
         }
       } else {
-        totalFromGrid = this.getEntityStateWatts(entities.grid!.entity!.consumption);
+        totalFromGrid = this.getEntityStateWatthours(entities.grid!.entity!.consumption);
       }
     }
 
@@ -354,10 +353,10 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     if (hasReturnToGrid) {
       if (typeof entities.grid!.entity === 'string') {
         totalToGrid = this.entityInverted('grid')
-          ? Math.max(this.getEntityStateWatts(entities.grid!.entity), 0)
-          : Math.abs(Math.min(this.getEntityStateWatts(entities.grid!.entity), 0));
+          ? Math.max(this.getEntityStateWatthours(entities.grid!.entity), 0)
+          : Math.abs(Math.min(this.getEntityStateWatthours(entities.grid!.entity), 0));
       } else {
-        totalToGrid = this.getEntityStateWatts(entities.grid?.entity.production);
+        totalToGrid = this.getEntityStateWatthours(entities.grid?.entity.production);
       }
     }
 
@@ -419,7 +418,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         : 'var(--energy-grid-consumption-color)',
     );
 
-    let individual1Usage: number | null = null;
+    const individual1Usage = hasIndividual1 ? this.getEntityStateWatthours(entities.individual1?.entity) : 0;
     let individual1SecondaryUsage: number | string | null = null;
     const individual1Name: string =
       this._config.entities.individual1?.name || this.getEntityStateObj(entities.individual1?.entity)?.attributes.friendly_name || 'Car';
@@ -434,12 +433,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       '--icon-individualone-color',
       this._config.entities.individual1?.color_icon ? 'var(--individualone-color)' : 'var(--primary-text-color)',
     );
-    if (hasIndividual1) {
-      const individual1Entity = this.hass.states[this._config.entities.individual1?.entity];
-      const individual1State = Number(individual1Entity.state);
-      if (this.entityInverted('individual1')) individual1Usage = Math.abs(Math.min(individual1State, 0));
-      else individual1Usage = Math.max(individual1State, 0);
-    }
+    const individual2Usage = hasIndividual2 ? this.getEntityStateWatthours(entities.individual2?.entity) : 0;
     if (hasIndividual1Secondary) {
       const individual1SecondaryEntity = this.hass.states[this._config.entities.individual1?.secondary_info?.entity];
       const individual1SecondaryState = individual1SecondaryEntity.state;
@@ -454,7 +448,6 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       }
     }
 
-    let individual2Usage: number | null = null;
     let individual2SecondaryUsage: number | string | null = null;
     const individual2Name: string =
       this._config.entities.individual2?.name || this.getEntityStateObj(entities.individual2?.entity)?.attributes.friendly_name || 'Motorcycle';
@@ -469,12 +462,6 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       '--icon-individualtwo-color',
       this._config.entities.individual2?.color_icon ? 'var(--individualtwo-color)' : 'var(--primary-text-color)',
     );
-    if (hasIndividual2) {
-      const individual2Entity = this.hass.states[this._config.entities.individual2?.entity];
-      const individual2State = Number(individual2Entity.state);
-      if (this.entityInverted('individual2')) individual2Usage = Math.abs(Math.min(individual2State, 0));
-      else individual2Usage = Math.max(individual2State, 0);
-    }
     if (hasIndividual2Secondary) {
       const individual2SecondaryEntity = this.hass.states[this._config.entities.individual2?.secondary_info?.entity];
       const individual2SecondaryState = individual2SecondaryEntity.state;
@@ -519,8 +506,8 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     }
     this.style.setProperty('--icon-solar-color', this._config.entities.solar?.color_icon ? 'var(--energy-solar-color)' : 'var(--primary-text-color)');
     if (hasSolarProduction) {
-      if (this.entityInverted('solar')) totalSolarProduction = Math.abs(Math.min(this.getEntityStateWatts(entities.solar?.entity), 0));
-      else totalSolarProduction = Math.max(this.getEntityStateWatts(entities.solar?.entity), 0);
+      if (this.entityInverted('solar')) totalSolarProduction = Math.abs(Math.min(this.getEntityStateWatthours(entities.solar?.entity), 0));
+      else totalSolarProduction = Math.max(this.getEntityStateWatthours(entities.solar?.entity), 0);
       if (entities.solar?.display_zero_tolerance) {
         if (entities.solar.display_zero_tolerance >= totalSolarProduction) totalSolarProduction = 0;
       }
@@ -531,14 +518,14 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     if (hasBattery) {
       if (typeof entities.battery?.entity === 'string') {
         totalBatteryIn = this.entityInverted('battery')
-          ? Math.max(this.getEntityStateWatts(entities.battery!.entity), 0)
-          : Math.abs(Math.min(this.getEntityStateWatts(entities.battery!.entity), 0));
+          ? Math.max(this.getEntityStateWatthours(entities.battery!.entity), 0)
+          : Math.abs(Math.min(this.getEntityStateWatthours(entities.battery!.entity), 0));
         totalBatteryOut = this.entityInverted('battery')
-          ? Math.abs(Math.min(this.getEntityStateWatts(entities.battery!.entity), 0))
-          : Math.max(this.getEntityStateWatts(entities.battery!.entity), 0);
+          ? Math.abs(Math.min(this.getEntityStateWatthours(entities.battery!.entity), 0))
+          : Math.max(this.getEntityStateWatthours(entities.battery!.entity), 0);
       } else {
-        totalBatteryIn = this.getEntityStateWatts(entities.battery?.entity?.production);
-        totalBatteryOut = this.getEntityStateWatts(entities.battery?.entity?.consumption);
+        totalBatteryIn = this.getEntityStateWatthours(entities.battery?.entity?.production);
+        totalBatteryOut = this.getEntityStateWatthours(entities.battery?.entity?.consumption);
       }
       if (entities?.battery?.display_zero_tolerance) {
         if (entities.battery.display_zero_tolerance >= totalBatteryIn) totalBatteryIn = 0;
@@ -689,6 +676,44 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     let nonFossilFuelenergy: number | undefined;
     let homeNonFossilCircumference = 0;
 
+    let lowCarbonEnergy: number | undefined;
+
+    let homeLowCarbonCircumference: number | undefined;
+    let homeHighCarbonCircumference: number | undefined;
+
+    // This fallback is used in the demo
+    let electricityMapUrl = 'https://app.electricitymap.org';
+
+    if (this.states.co2SignalEntity && this.states.fossilEnergyConsumption) {
+      // Calculate high carbon consumption
+      const highCarbonEnergy = Object.values(this.states.fossilEnergyConsumption)
+        .map(a => (typeof a === 'number' ? a : 0)) // Convert non-number values to 0
+        .reduce((sum, a) => sum + a, 0);
+
+      const co2State = this.hass.states[this.states.co2SignalEntity.entity_id];
+
+      if (co2State?.attributes.country_code) {
+        electricityMapUrl += `/zone/${co2State.attributes.country_code}`;
+      }
+
+      if (highCarbonEnergy !== null) {
+        lowCarbonEnergy = totalFromGrid - highCarbonEnergy;
+
+        let highCarbonConsumption: number;
+        if (gridConsumption !== totalFromGrid) {
+          // Only get the part that was used for consumption and not the battery
+          highCarbonConsumption = highCarbonEnergy * (gridConsumption / totalFromGrid);
+        } else {
+          highCarbonConsumption = highCarbonEnergy;
+        }
+
+        homeHighCarbonCircumference = circleCircumference * (highCarbonConsumption / totalHomeConsumption);
+
+        homeLowCarbonCircumference =
+          circleCircumference - (homeSolarCircumference || 0) - (homeBatteryCircumference || 0) - homeHighCarbonCircumference;
+      }
+    }
+
     if (hasNonFossilFuelUsage) {
       const nonFossilFuelDecimal: number = 1 - this.getEntityState(entities.fossil_fuel_percentage?.entity) / 100;
       nonFossilFuelenergy = gridConsumption * nonFossilFuelDecimal;
@@ -733,7 +758,6 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       nonFossil: this.circleRate(nonFossilFuelenergy ?? 0, totalLines),
     };
 
-    // Smooth duration changes
     ['batteryGrid', 'batteryToHome', 'gridToHome', 'solarToBattery', 'solarToGrid', 'solarToHome'].forEach(flowName => {
       const flowSVGElement = this[`${flowName}Flow`] as SVGSVGElement;
       if (flowSVGElement && this.previousDur[flowName] && this.previousDur[flowName] !== newDur[flowName]) {
@@ -1574,9 +1598,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                             : 'padding-bottom: 0px;'}"
                         ></ha-icon>
                         ${entities.individual1?.display_zero_state !== false || (individual1Usage || 0) > 0
-                          ? html` <span class="individual1"
-                              >${this.displayValue(individual1Usage, this._config.entities.individual1?.unit_of_measurement)}
-                            </span>`
+                          ? html` <span class="individual1">${this.displayValue(individual1Usage)} </span>`
                           : ''}
                       </div>
                       <span class="label">${individual1Name}</span>

@@ -11,10 +11,11 @@ interface mainConfigOptions {
   wh_decimals?: number;
   wh_kwh_threshold?: number;
   clickable_entities?: boolean;
-  max_expected_power?: number;
-  min_expected_power?: number;
+  max_expected_energy?: number;
+  min_expected_energy?: number;
   display_zero_lines?: boolean;
   energy_date_selection?: boolean;
+  use_new_flow_rate_model?: boolean;
 }
 export interface EnergyFlowCardPlusConfig extends LovelaceCardConfig, mainConfigOptions {
   entities: {
@@ -51,7 +52,7 @@ export interface EnergyFlowCardPlusConfig extends LovelaceCardConfig, mainConfig
     fossil_fuel_percentage?: baseConfigEntity & {
       entity: string;
       color?: string;
-      state_type?: 'percentage' | 'power';
+      state_type?: 'percentage' | 'energy';
       color_icon?: boolean;
       display_zero?: boolean;
       display_zero_state?: boolean;
