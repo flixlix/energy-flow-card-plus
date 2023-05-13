@@ -19,6 +19,10 @@ The goal is to deliver a card that fits in the overall design of the Energy Dash
 This card **does not** aim to display Values (Meaning instantaneous/current consumption).
 If this is your goal, check out the [Power Flow Card Plus](https://github.com/flixlix/power-flow-card-plus).
 
+## Recommendation
+
+If you would like to customize the Energy period selector and its dates, check out this card: [Energy Period Selector Plus](https://github.com/flixlix/energy-period-selector-plus)
+
 ## Install
 
 ### HACS (recommended)
