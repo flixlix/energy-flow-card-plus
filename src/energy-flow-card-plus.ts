@@ -197,7 +197,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     }
     const stateObj = this._config?.energy_date_selection !== false ? this.states[entity] : this.hass?.states[entity];
     const value = coerceNumber(stateObj?.state);
-    if (stateObj?.attributes?.unit_of_measurement !== 'Wh') return value * 1000;
+    if (stateObj.attributes.unit_of_measurement?.toUpperCase().startsWith('KWH')) return value * 1000; // case insensitive check `KWH`
     return value;
   };
 
@@ -863,14 +863,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       this._config.entities.home?.secondary_info?.color_value ? 'var(--text-home-color)' : 'var(--primary-text-color)',
     );
 
-    const homeState = this.getEntityStateWatthours(entities.home?.entity);
-
-    const homeStateDisplay =
-      entities.home?.override_state && entities.home.entity
+    const homeUsageToDisplay =
+      this._config.entities.home?.override_state && this._config.entities.home.entity
         ? entities.home?.subtract_individual
-          ? this.displayValue(homeState - totalIndividualConsumption)
-          : this.displayValue(homeState)
-        : entities.home?.subtract_individual
+          ? this.displayValue(this.getEntityStateWatthours(entities.home.entity) - totalIndividualConsumption)
+          : this.displayValue(this.getEntityStateWatthours(entities.home.entity))
+        : this._config.entities.home?.subtract_individual
         ? this.displayValue(totalHomeConsumption - totalIndividualConsumption || 0)
         : this.displayValue(totalHomeConsumption);
 
@@ -1322,7 +1320,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                     `
                   : ''}
                 <ha-icon .icon=${homeIcon}></ha-icon>
-                ${homeStateDisplay}
+                ${homeUsageToDisplay}
                 <svg>
                   ${homeSolarCircumference !== undefined
                     ? svg`<circle
