@@ -15,6 +15,7 @@ import { registerCustomCard } from './utils/register-custom-card';
 import { logError } from './logging';
 import { styles } from './style';
 import { defaultValues, getDefaultConfig } from './utils/get-default-config';
+import getElementWidth from './utils/get-element-width';
 
 registerCustomCard({
   type: 'energy-flow-card-plus',
@@ -425,6 +426,10 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
           : 'var(--energy-grid-return-color)'
         : 'var(--energy-grid-consumption-color)',
     );
+
+    const isCardWideEnough = getElementWidth(document.getElementById('card-content')) > 420;
+    this.style.setProperty('--lines-svg-not-flat-line-height', isCardWideEnough ? '106%' : '102%');
+    this.style.setProperty('--lines-svg-not-flat-line-top', isCardWideEnough ? '-3%' : '-1%');
 
     const individual1Usage = hasIndividual1 ? this.getEntityStateWatthours(entities.individual1?.entity) : 0;
     let individual1SecondaryUsage: number | string | null = null;
@@ -876,7 +881,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
 
     return html`
       <ha-card .header=${this._config.title}>
-        <div class="card-content">
+        <div class="card-content" id="card-content">
           ${hasSolarProduction || hasIndividual2 || hasIndividual1 || hasFossilFuelPercentage
             ? html`<div class="row">
                 ${!hasFossilFuelPercentage
