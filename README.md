@@ -119,6 +119,7 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 | color | `object` |  | Check [Color Objects](#color-object) for more information. |
 | color_icon | `boolean` or "production" or "consumption" | `false` | If set to `true`, icon color will match the highest value. If set to `production`, icon color will match the production. If set to `consumption`, icon color will match the consumption. |
 | color_circle | `boolean` or "production" or "consumption" | `false` | If set to `production`, circle color will match the production. If set to `consumption`, circle color will match the consumption. If set to `false`, circle color will match the consumption. |
+| secondary_info | `object` | `undefined` | Check [Secondary Info Object](#secondary-info-configuration) |
 
 #### Solar Configuration
 
@@ -130,6 +131,8 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 | color | `string` |  | HEX value of the color for circles labels and lines of solar production. |
 | color_icon | `boolean` | `false` | If set to `true`, icon color will match the circle's color. If set to `false`, icon color will match the text's color.  |
 | color_value | `boolean` | `false` | If set to `true`, text color of the state will match the circle's color. If set to `false`, text color of the state will be your primary text color.  |
+| display_zero_state | `boolean` | `true` | If set to `true`, the state will be shown even if it is `0`. If set to `false`, the state will be hidden if it is `0`. |
+| secondary_info | `object` | `undefined` | Check [Secondary Info Object](#secondary-info-configuration) |
 
 #### Battery Configuration
 
@@ -160,6 +163,7 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 | display_zero_tolerance | `number` | `0` | If set, the device will be displayed if the state is greater than the tolerance set (This is also available for the secondary info). No need to set `display_zero` property to true. |
 | display_zero_state | `boolean` | `true` | If set to `true`, the state will be shown even if it is `0`. If set to `false`, the state will be hidden if it is `0`. |
 | color_value | `boolean` | `false` | If set to `true`, state text color will match the circle's color. If set to `false`, state text color will be the primary text color.  |
+| secondary_info | `object` | `undefined` | Check [Secondary Info Object](#secondary-info-configuration) |
 
 #### Home Configuration
 
@@ -188,6 +192,7 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 | state_type | `string` | `energy` | The type of state to use for the entity. Can be `energy` or `percentage`. When set to `energy` the state will be the amount of energy from the grid that is low-carbon. When set to `percentage` the state will be the percentage of energy from the grid that is low-carbon. |
 | unit_white_space | `boolean` | `true` | If set to `false` will not add any whitespace between unit and state. Otherwise, white space will be added. |
 | calculate_flow_rate | `boolean` or `number` | `false` | If set to `true`, the flow rate will be calculated by using the flow rate formula (either the new or the old one, depending on your configuration). If set to a number, the flow rate will be set to that number. For example, defining the value `10` will ensure one dot will flow every 10 seconds. |
+| secondary_info | `object` | `undefined` | Check [Secondary Info Object](#secondary-info-configuration) |
 
 #### Color Object
 
