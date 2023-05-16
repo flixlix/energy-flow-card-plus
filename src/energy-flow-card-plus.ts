@@ -596,7 +596,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       this.style.setProperty('--energy-battery-in-color', batteryProductionColor || '#a280db');
     }
 
-    const mainBatteryEntity: undefined | string = entities.battery.entity?.consumption || entities.battery?.entity?.production;
+    const mainBatteryEntity: undefined | string = entities?.battery?.entity?.consumption || entities.battery?.entity?.production;
 
     const batteryName: string =
       entities.battery?.name ||
