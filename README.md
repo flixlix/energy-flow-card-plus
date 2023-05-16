@@ -12,7 +12,7 @@
 
 Although the code base is very different, the design of this card is heavily inspired by the [Official Energy Distribution Card](https://www.home-assistant.io/dashboards/energy/#energy-distribution).
 
-The goal is to deliver a card that fits in the overall design of the Energy Dashboard, while providing more features, such as Individual Devices and bringing small UI enhancements.
+The goal is to deliver a card that fits in the overall design of the Energy Dashboard, while providing more features, such as Individual Devices, Secondary Information and bringing small UI enhancements.
 
 ## Scope
 
