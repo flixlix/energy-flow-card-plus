@@ -9,7 +9,7 @@ import { SubscribeMixin } from './energy/subscribe-mixin';
 import { HassEntities, HassEntity } from 'home-assistant-js-websocket';
 import { EnergyCollection, getEnergyDataCollection, getStatistics } from './energy/index';
 import { HomeAssistantReal } from './hass';
-import { HomeAssistant, formatNumber, round } from 'custom-card-helpers';
+import { HomeAssistant, LovelaceCardEditor, formatNumber, round } from 'custom-card-helpers';
 import { classMap } from 'lit/directives/class-map.js';
 import { registerCustomCard } from './utils/register-custom-card';
 import { logError } from './logging';
@@ -41,6 +41,11 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
   @state() private states: HassEntities = {};
   @state() private entitiesArr: string[] = [];
   @state() private error?: Error | unknown;
+
+  public static async getConfigElement(): Promise<LovelaceCardEditor> {
+    await import('./ui-editor/ui-editor');
+    return document.createElement('energy-flow-card-plus-editor');
+  }
 
   public hassSubscribe() {
     if (this._config?.energy_date_selection === false) {

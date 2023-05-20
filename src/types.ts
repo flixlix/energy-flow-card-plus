@@ -11,7 +11,7 @@ import { UNIT_PREFIXES } from './const';
 
 declare global {
   interface HTMLElementTagNameMap {
-    'energy-flow-card-plus-editor': LovelaceCardEditor;
+
     'hui-error-card': LovelaceCard;
   }
 }
