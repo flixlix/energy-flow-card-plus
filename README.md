@@ -44,6 +44,7 @@ If this is your goal, check out the [Power Flow Card Plus](https://github.com/fl
 
 ## Recommendation
 
+![](https://user-images.githubusercontent.com/61006057/238181763-b5064161-b8dd-4fa5-865a-5815635d3cbb.png)
 If you would like to customize the Energy period selector and its dates, check out this card: [Energy Period Selector Plus](https://github.com/flixlix/energy-period-selector-plus)
 
 ## Install
