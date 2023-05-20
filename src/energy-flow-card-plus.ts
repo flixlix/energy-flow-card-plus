@@ -207,13 +207,18 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return value;
   };
 
-  private displayValue = (value: number | string | null, unit?: string | undefined, unitWhiteSpace?: boolean | undefined) => {
+  private displayValue = (
+    value: number | string | null,
+    unit?: string | undefined,
+    unitWhiteSpace?: boolean | undefined,
+    decimals?: number | undefined,
+  ) => {
     if (value === null) return '0';
     if (Number.isNaN(+value)) return value;
     const valueInNumber = Number(value);
     const isKWh = unit === undefined && valueInNumber >= this._config!.wh_kwh_threshold;
     const v = formatNumber(
-      isKWh ? round(valueInNumber / 1000, this._config!.kwh_decimals) : round(valueInNumber, this._config!.wh_decimals),
+      isKWh ? round(valueInNumber / 1000, this._config!.kwh_decimals) : round(valueInNumber, decimals ?? this._config!.wh_decimals),
       this.hass.locale,
     );
     return `${v}${unitWhiteSpace === false ? '' : ' '}${unit || (isKWh ? 'kWh' : 'Wh')}`;
@@ -830,6 +835,20 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       (entities.fossil_fuel_percentage?.use_metadata && this.getEntityStateObj(entities.fossil_fuel_percentage.entity)?.attributes.friendly_name) ||
       this.hass.localize('ui.panel.lovelace.cards.energy.energy_distribution.low_carbon');
 
+    const individual1DisplayState = this.displayValue(
+      individual1Usage,
+      this._config.entities.individual1?.unit_of_measurement,
+      undefined,
+      entities.individual1?.decimals,
+    );
+
+    const individual2DisplayState = this.displayValue(
+      individual2Usage,
+      this._config.entities.individual2?.unit_of_measurement,
+      undefined,
+      entities.individual2?.decimals,
+    );
+
     this.style.setProperty('--text-home-color', textHomeColor);
 
     this.style.setProperty(
@@ -1080,9 +1099,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                             : 'padding-bottom: 0px;'}"
                         ></ha-icon>
                         ${entities.individual2?.display_zero_state !== false || (individual2Usage || 0) > 0
-                          ? html` <span class="individual2"
-                              >${this.displayValue(individual2Usage, this._config.entities.individual2?.unit_of_measurement)}
-                            </span>`
+                          ? html` <span class="individual2">${individual2DisplayState} </span>`
                           : ''}
                       </div>
                       ${this.showLine(individual2Usage || 0)
@@ -1161,9 +1178,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                             : 'padding-bottom: 0px;'}"
                         ></ha-icon>
                         ${entities.individual1?.display_zero_state !== false || (individual1Usage || 0) > 0
-                          ? html` <span class="individual1"
-                              >${this.displayValue(individual1Usage, this._config.entities.individual1?.unit_of_measurement)}
-                            </span>`
+                          ? html` <span class="individual1">${individual1DisplayState} </span>`
                           : ''}
                       </div>
                       ${this.showLine(individual1Usage || 0)
@@ -1578,7 +1593,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                             : 'padding-bottom: 0px;'}"
                         ></ha-icon>
                         ${entities.individual1?.display_zero_state !== false || (individual1Usage || 0) > 0
-                          ? html` <span class="individual1">${this.displayValue(individual1Usage)} </span>`
+                          ? html` <span class="individual1">${individual1DisplayState} </span>`
                           : ''}
                       </div>
                       <span class="label">${individual1Name}</span>

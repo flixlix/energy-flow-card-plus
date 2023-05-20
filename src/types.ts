@@ -234,6 +234,7 @@ export type IndividualDeviceType = {
   color_label?: boolean;
   calculate_flow_rate?: boolean;
   use_metadata?: boolean;
+  decimals?: number;
 };
 
 export type EntityType =
