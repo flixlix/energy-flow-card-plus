@@ -7,6 +7,29 @@
 
 ![demo_energy_flow_card_plus](https://github.com/flixlix/energy-flow-card-plus/assets/61006057/d3650e8a-1c82-4993-9951-18c04fbdf4d6)
 
+<details> <summary>✅ Advantages of this Card compared to the official Energy Distribution Card</summary>
+
+## Bugfixes
+  - Corrected crooked lines
+  ![Crooked Lines](https://github.com/flixlix/energy-flow-card-plus/assets/61006057/5250a695-a022-4960-a06a-80650a7fc139)
+  - Corrected curved lines not connecting to the circle
+  ![Curved Lines](https://github.com/flixlix/energy-flow-card-plus/assets/61006057/1dda7efb-be4d-4304-a5d8-6faea257a8fe)
+  - Changed the color of the line between the battery and the grid
+  ![Color Line Battery Grid](https://github.com/flixlix/energy-flow-card-plus/assets/61006057/62d71eae-049d-4492-86cf-16f712920cb6)
+## Features
+- Choose wether or not to change the color of the icons
+- Choose wether or not to change the color of the text
+- Added option for Dynamic Circle colors
+- Use different sensors than the ones used in the Energy Integration
+- Choose wether to show the Energy or the Percentage in the Low-Carbon Circle
+- Added Option for Secondary Information
+- Option for Templates in secondary Information
+- Override Home State (eg: to calculate Energy losses)
+- Choose wether to hide inactive lines
+- Individual Devices
+
+
+</details>
 
 ## Goal
 
