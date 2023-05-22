@@ -187,12 +187,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return 1.66;
   };
 
-  private getEntityState = (entity: string | undefined): number => {
+  private getEntityState = (entity: string | undefined, instantaneousValue?: boolean): number => {
     if (!entity || !this.entityAvailable(entity)) {
       this.unavailableOrMisconfiguredError(entity);
       return 0;
     }
-    const stateObj = this._config?.energy_date_selection !== false ? this.states[entity] : this.hass?.states[entity];
+    const stateObj = this._config?.energy_date_selection !== false && !instantaneousValue ? this.states[entity] : this.hass?.states[entity];
     return coerceNumber(stateObj.state);
   };
 
@@ -203,7 +203,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     }
     const stateObj = this._config?.energy_date_selection !== false ? this.states[entity] : this.hass?.states[entity];
     const value = coerceNumber(stateObj?.state);
-    if (stateObj.attributes.unit_of_measurement?.toUpperCase().startsWith('KWH')) return value * 1000; // case insensitive check `KWH`
+    if (stateObj?.attributes.unit_of_measurement?.toUpperCase().startsWith('KWH')) return value * 1000; // case insensitive check `KWH`
     return value;
   };
 
@@ -716,7 +716,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       (batteryFromGrid ?? 0) +
       (batteryToGrid ?? 0);
 
-    const batteryChargeState = entities.battery?.state_of_charge?.length ? this.getEntityState(entities.battery?.state_of_charge) : null;
+    const batteryChargeState = entities?.battery?.state_of_charge ? this.getEntityState(entities.battery?.state_of_charge, true) : null;
 
     let batteryIcon = 'mdi:battery-high';
     if (batteryChargeState === null) {
