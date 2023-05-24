@@ -818,7 +818,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       entities.fossil_fuel_percentage?.icon ||
       (entities.fossil_fuel_percentage?.use_metadata && this.getEntityStateObj(entities.fossil_fuel_percentage.entity)?.attributes?.icon) ||
       'mdi:leaf';
-      
+
     const nonFossilName =
       entities.fossil_fuel_percentage?.name ||
       (entities.fossil_fuel_percentage?.use_metadata && this.getEntityStateObj(entities.fossil_fuel_percentage.entity)?.attributes.friendly_name) ||
@@ -904,7 +904,10 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       homeNonFossilCircumference = circleCircumference - (homeSolarCircumference || 0) - (homeBatteryCircumference || 0) - homeGridCircumference;
     }
 
-    const hasNonFossilFuelUsage = lowCarbonEnergy !== null && lowCarbonEnergy && lowCarbonEnergy > 0;
+    const hasNonFossilFuelUsage =
+      lowCarbonEnergy !== null &&
+      lowCarbonEnergy &&
+      lowCarbonEnergy > (this._config.entities.fossil_fuel_percentage?.display_zero_tolerance * 1000 || 0);
 
     const hasFossilFuelPercentage = entities.fossil_fuel_percentage?.show === true;
 
@@ -913,7 +916,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         <div class="card-content" id="card-content">
           ${hasSolarProduction || hasIndividual2 || hasIndividual1 || hasFossilFuelPercentage
             ? html`<div class="row">
-                ${!hasFossilFuelPercentage
+                ${!hasFossilFuelPercentage || (!hasNonFossilFuelUsage && entities.fossil_fuel_percentage?.display_zero === false)
                   ? html`<div class="spacer"></div>`
                   : html`<div class="circle-container low-carbon">
                       <span class="label">${nonFossilName}</span>
