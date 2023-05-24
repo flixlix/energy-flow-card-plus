@@ -890,6 +890,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         ? this.displayValue(totalHomeConsumption - totalIndividualConsumption || 0)
         : this.displayValue(totalHomeConsumption);
 
+    let lowCarbonPercentage: number | undefined;
     if (this._data.co2SignalEntity && this._data.fossilEnergyConsumption) {
       // Calculate high carbon consumption
       const highCarbonEnergy = Object.values(this._data.fossilEnergyConsumption).reduce((sum, a) => sum + a, 0) * 1000;
@@ -902,6 +903,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
 
       homeGridCircumference = circleCircumference * (highCarbonConsumption / totalHomeConsumption);
       homeNonFossilCircumference = circleCircumference - (homeSolarCircumference || 0) - (homeBatteryCircumference || 0) - homeGridCircumference;
+      lowCarbonPercentage = ((lowCarbonEnergy || 0) / totalFromGrid) * 100;
     }
 
     const hasNonFossilFuelUsage =
@@ -971,9 +973,14 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                             ? 'padding-bottom: 2px;'
                             : 'padding-bottom: 0px;'}"
                         ></ha-icon>
-                        ${entities.fossil_fuel_percentage?.display_zero_state !== false ||
-                        (nonFossilFuelenergy || 0) > (entities.fossil_fuel_percentage?.display_zero_tolerance || 0)
-                          ? html` <span class="low-carbon">${this.displayValue(lowCarbonEnergy ?? null)}</span> `
+                        ${entities.fossil_fuel_percentage?.display_zero_state !== false || hasNonFossilFuelUsage !== false
+                          ? html`
+                              <span class="low-carbon"
+                                >${entities.fossil_fuel_percentage?.state_type === 'percentage'
+                                  ? lowCarbonPercentage?.toFixed(0) + '%' || '0%'
+                                  : this.displayValue(lowCarbonEnergy ?? null)}</span
+                              >
+                            `
                           : ''}
                       </div>
                       ${this.showLine(nonFossilFuelenergy || 0)
