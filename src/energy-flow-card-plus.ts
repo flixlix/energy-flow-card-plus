@@ -818,13 +818,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       entities.fossil_fuel_percentage?.icon ||
       (entities.fossil_fuel_percentage?.use_metadata && this.getEntityStateObj(entities.fossil_fuel_percentage.entity)?.attributes?.icon) ||
       'mdi:leaf';
-    console.log(
-      entities.fossil_fuel_percentage?.icon,
-      entities.fossil_fuel_percentage?.use_metadata,
-      this.getEntityStateObj(entities.fossil_fuel_percentage.entity)?.attributes?.icon,
-      nonFossilIcon,
-    );
-
+      
     const nonFossilName =
       entities.fossil_fuel_percentage?.name ||
       (entities.fossil_fuel_percentage?.use_metadata && this.getEntityStateObj(entities.fossil_fuel_percentage.entity)?.attributes.friendly_name) ||
