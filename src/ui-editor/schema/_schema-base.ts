@@ -145,6 +145,7 @@ export function getBaseMainConfigSchema(field?: string) {
     schema: [
       { name: 'name', selector: { text: {} } },
       { name: 'icon', selector: { icon: {} } },
+      { name: 'use_metadata', label: 'Use Metadata', selector: { boolean: {} } },
     ],
   };
   if (field === 'battery' || field === 'grid') {

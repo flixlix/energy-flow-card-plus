@@ -138,14 +138,11 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     logError(`Entity "${entityId ?? 'Unknown'}" is not available or misconfigured`);
 
   private entityExists = (entityId: string): boolean => {
-    if (this._config?.energy_date_selection) {
-      return entityId in this.states;
-    }
     return entityId in this.hass.states;
   };
 
-  private entityAvailable = (entityId: string): boolean => {
-    if (this._config?.energy_date_selection) {
+  private entityAvailable = (entityId: string, instantaneousValue?: boolean): boolean => {
+    if (this._config?.energy_date_selection && instantaneousValue !== true) {
       return isNumberValue(this.states[entityId]?.state);
     }
     return isNumberValue(this.hass.states[entityId]?.state);
@@ -172,7 +169,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
   };
 
   private getEntityStateObj = (entity: string | undefined): HassEntity | undefined => {
-    if (!entity || !this.entityAvailable(entity)) {
+    if (!entity || !this.entityAvailable(entity, true)) {
       this.unavailableOrMisconfiguredError(entity);
       return undefined;
     }
@@ -190,7 +187,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
   };
 
   private getEntityState = (entity: string | undefined, instantaneousValue?: boolean): number => {
-    if (!entity || !this.entityAvailable(entity)) {
+    if (!entity || !this.entityAvailable(entity, instantaneousValue)) {
       this.unavailableOrMisconfiguredError(entity);
       return 0;
     }
@@ -263,7 +260,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return result;
   };
 
-  private openDetails(entityId?: string | undefined): void {
+  private openDetails(entityId?: string | undefined, instantaneousValue?: boolean): void {
     if (!entityId || !this._config.clickable_entities) return;
     /* also needs to open details if entity is unavailable, but not if entity doesn't exist is hass states */
     if (!this.entityExists(entityId)) return;
@@ -821,6 +818,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       entities.fossil_fuel_percentage?.icon ||
       (entities.fossil_fuel_percentage?.use_metadata && this.getEntityStateObj(entities.fossil_fuel_percentage.entity)?.attributes?.icon) ||
       'mdi:leaf';
+    console.log(
+      entities.fossil_fuel_percentage?.icon,
+      entities.fossil_fuel_percentage?.use_metadata,
+      this.getEntityStateObj(entities.fossil_fuel_percentage.entity)?.attributes?.icon,
+      nonFossilIcon,
+    );
 
     const nonFossilName =
       entities.fossil_fuel_percentage?.name ||
@@ -893,7 +896,6 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         ? this.displayValue(totalHomeConsumption - totalIndividualConsumption || 0)
         : this.displayValue(totalHomeConsumption);
 
-
     if (this._data.co2SignalEntity && this._data.fossilEnergyConsumption) {
       // Calculate high carbon consumption
       const highCarbonEnergy = Object.values(this._data.fossilEnergyConsumption).reduce((sum, a) => sum + a, 0) * 1000;
@@ -908,13 +910,9 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       homeNonFossilCircumference = circleCircumference - (homeSolarCircumference || 0) - (homeBatteryCircumference || 0) - homeGridCircumference;
     }
 
-    const hasNonFossilFuelUsage =
-      gridConsumption * 1 - this.getEntityState(entities.fossil_fuel_percentage?.entity) / 100 > 0 &&
-      entities.fossil_fuel_percentage?.entity !== undefined &&
-      this.entityAvailable(entities.fossil_fuel_percentage?.entity);
+    const hasNonFossilFuelUsage = lowCarbonEnergy !== null && lowCarbonEnergy && lowCarbonEnergy > 0;
 
     const hasFossilFuelPercentage = entities.fossil_fuel_percentage?.show === true;
-
 
     return html`
       <ha-card .header=${this._config.title}>
