@@ -1,9 +1,37 @@
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { HomeAssistant } from "custom-card-helpers";
-import { Collection } from "home-assistant-js-websocket";
+import { HomeAssistant } from 'custom-card-helpers';
+import { Collection } from 'home-assistant-js-websocket';
 import { addHours, differenceInDays } from 'date-fns';
 
+interface StatisticsMetaData {
+  statistics_unit_of_measurement: string | null;
+  statistic_id: string;
+  source: string;
+  name?: string | null;
+  has_sum: boolean;
+  has_mean: boolean;
+  unit_class: string | null;
+}
+
+interface ConfigEntry {
+  entry_id: string;
+  domain: string;
+  title: string;
+  source: string;
+  state: 'loaded' | 'setup_error' | 'migration_error' | 'setup_retry' | 'not_loaded' | 'failed_unload' | 'setup_in_progress';
+  supports_options: boolean;
+  supports_remove_device: boolean;
+  supports_unload: boolean;
+  pref_disable_new_entities: boolean;
+  pref_disable_polling: boolean;
+  disabled_by: 'user' | null;
+  reason: string | null;
+}
+
+interface FossilEnergyConsumption {
+  [date: string]: number;
+}
 
 export interface EnergyData {
   start: Date;
@@ -13,12 +41,12 @@ export interface EnergyData {
   prefs: EnergyPreferences;
   info: EnergyInfo;
   stats: Statistics;
-  // statsMetadata: Record<string, StatisticsMetaData>;
+  statsMetadata: Record<string, StatisticsMetaData>;
   statsCompare: Statistics;
-  // co2SignalConfigEntry?: ConfigEntry;
+  co2SignalConfigEntry?: ConfigEntry;
   co2SignalEntity?: string;
-  // fossilEnergyConsumption?: FossilEnergyConsumption;
-  // fossilEnergyConsumptionCompare?: FossilEnergyConsumption;
+  fossilEnergyConsumption?: FossilEnergyConsumption;
+  fossilEnergyConsumptionCompare?: FossilEnergyConsumption;
 }
 
 export interface Statistics {
@@ -74,10 +102,7 @@ export interface EnergyCollection extends Collection<EnergyData> {
   _active: number;
 }
 
-export const getEnergyDataCollection = (
-  hass: HomeAssistant,
-  key = '_energy'
-): EnergyCollection | null => {
+export const getEnergyDataCollection = (hass: HomeAssistant, key = '_energy'): EnergyCollection | null => {
   if ((hass.connection as any)[key]) {
     return (hass.connection as any)[key];
   }
@@ -85,17 +110,16 @@ export const getEnergyDataCollection = (
   return null;
 };
 
-
 const fetchStatistics = (
   hass: HomeAssistant,
   startTime: Date,
   endTime?: Date,
   statistic_ids?: string[],
-  period: "5minute" | "hour" | "day" | "week" | "month" = "hour",
+  period: '5minute' | 'hour' | 'day' | 'week' | 'month' = 'hour',
   // units?: StatisticsUnitConfiguration
 ) =>
   hass.callWS<Statistics>({
-    type: "recorder/statistics_during_period",
+    type: 'recorder/statistics_during_period',
     start_time: startTime.toISOString(),
     end_time: endTime?.toISOString(),
     statistic_ids,
@@ -103,9 +127,7 @@ const fetchStatistics = (
     // units,
   });
 
-const calculateStatisticSumGrowth = (
-  values: StatisticValue[]
-): number | null => {
+const calculateStatisticSumGrowth = (values: StatisticValue[]): number | null => {
   if (!values || values.length < 2) {
     return null;
   }
@@ -121,14 +143,9 @@ const calculateStatisticSumGrowth = (
 };
 
 export async function getStatistics(hass: HomeAssistant, energyData: EnergyData, devices: string[]): Promise<Record<string, number>> {
-  const dayDifference = differenceInDays(
-    energyData.end || new Date(),
-    energyData.start
-  );
+  const dayDifference = differenceInDays(energyData.end || new Date(), energyData.start);
   const startMinHour = addHours(energyData.start, -1);
-  const period = dayDifference > 35 ? "month" : dayDifference > 2 ? "day" : "hour";
-
-
+  const period = dayDifference > 35 ? 'month' : dayDifference > 2 ? 'day' : 'hour';
 
   const data = await fetchStatistics(
     hass,
@@ -138,8 +155,8 @@ export async function getStatistics(hass: HomeAssistant, energyData: EnergyData,
     period,
     // units
   );
-  
-  Object.values(data).forEach((stat) => {
+
+  Object.values(data).forEach(stat => {
     // if the start of the first value is after the requested period, we have the first data point, and should add a zero point
     if (stat.length && new Date(stat[0].start) > startMinHour) {
       stat.unshift({
@@ -152,10 +169,13 @@ export async function getStatistics(hass: HomeAssistant, energyData: EnergyData,
     }
   });
 
-  return devices.reduce((states, id) => ({
-    ...states,
-    [id]: calculateStatisticSumGrowth(data[id]),
-  }), {})
+  return devices.reduce(
+    (states, id) => ({
+      ...states,
+      [id]: calculateStatisticSumGrowth(data[id]),
+    }),
+    {},
+  );
 }
 
 export function getEnergySourceColor(type: string) {
