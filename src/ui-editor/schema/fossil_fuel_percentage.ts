@@ -52,7 +52,13 @@ const mainSchema = {
 
 export const nonFossilSchema = [
   {
+    name: "show",
+    label: "Show",
+    selector: { boolean: {} },
+  },
+  {
     name: "entity",
+    label: "Entity (Only used for click action)",
     selector: { entity: {} },
   },
   mainSchema,

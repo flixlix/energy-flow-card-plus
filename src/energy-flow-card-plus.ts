@@ -7,7 +7,7 @@ import { localize } from './localize/localize';
 import { coerceNumber, coerceStringArray, isNumberValue, renderError } from './utils';
 import { SubscribeMixin } from './energy/subscribe-mixin';
 import { HassEntities, HassEntity } from 'home-assistant-js-websocket';
-import { EnergyCollection, getEnergyDataCollection, getStatistics } from './energy/index';
+import { EnergyCollection, EnergyData, getEnergyDataCollection, getStatistics } from './energy/index';
 import { HomeAssistantReal } from './hass';
 import { HomeAssistant, LovelaceCardEditor, formatNumber, round } from 'custom-card-helpers';
 import { classMap } from 'lit/directives/class-map.js';
@@ -41,6 +41,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
   @state() private states: HassEntities = {};
   @state() private entitiesArr: string[] = [];
   @state() private error?: Error | unknown;
+  @state() private _data?: EnergyData;
 
   public static async getConfigElement(): Promise<LovelaceCardEditor> {
     await import('./ui-editor/ui-editor');
@@ -79,6 +80,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return [
       energyPromise.then(async collection => {
         return collection.subscribe(async data => {
+          this._data = data;
           if (this.entitiesArr) {
             const stats = await getStatistics(this.hass, data, this.entitiesArr);
             const states: HassEntities = {};
@@ -290,6 +292,10 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
   protected render(): TemplateResult {
     if (!this._config || !this.hass) {
       return html``;
+    }
+
+    if (!this._data) {
+      return html`${this.hass.localize('ui.panel.lovelace.cards.energy.loading')}`;
     }
 
     const { entities } = this._config;
@@ -687,25 +693,11 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       }
     }
 
-    const hasNonFossilFuelUsage =
-      gridConsumption * 1 - this.getEntityState(entities.fossil_fuel_percentage?.entity) / 100 > 0 &&
-      entities.fossil_fuel_percentage?.entity !== undefined &&
-      this.entityAvailable(entities.fossil_fuel_percentage?.entity);
+    let homeGridCircumference: number | undefined;
 
-    const hasFossilFuelPercentage =
-      (entities.fossil_fuel_percentage?.entity !== undefined && entities.fossil_fuel_percentage?.display_zero === true) || hasNonFossilFuelUsage;
-
+    let lowCarbonEnergy: number | undefined;
     let nonFossilFuelenergy: number | undefined;
-    let homeNonFossilCircumference = 0;
-
-    if (hasNonFossilFuelUsage) {
-      const nonFossilFuelDecimal: number = 1 - this.getEntityState(entities.fossil_fuel_percentage?.entity) / 100;
-      nonFossilFuelenergy = gridConsumption * nonFossilFuelDecimal;
-      homeNonFossilCircumference = circleCircumference * (nonFossilFuelenergy / totalHomeConsumption);
-    }
-    const homeGridCircumference =
-      circleCircumference *
-      ((totalHomeConsumption - (nonFossilFuelenergy ?? 0) - (batteryConsumption ?? 0) - (solarConsumption ?? 0)) / totalHomeConsumption);
+    let homeNonFossilCircumference: number | undefined;
 
     const totalLines =
       gridConsumption +
@@ -901,6 +893,29 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         ? this.displayValue(totalHomeConsumption - totalIndividualConsumption || 0)
         : this.displayValue(totalHomeConsumption);
 
+
+    if (this._data.co2SignalEntity && this._data.fossilEnergyConsumption) {
+      // Calculate high carbon consumption
+      const highCarbonEnergy = Object.values(this._data.fossilEnergyConsumption).reduce((sum, a) => sum + a, 0) * 1000;
+
+      if (highCarbonEnergy !== null) {
+        lowCarbonEnergy = totalFromGrid - highCarbonEnergy;
+      }
+
+      const highCarbonConsumption = highCarbonEnergy * (gridConsumption / totalFromGrid);
+
+      homeGridCircumference = circleCircumference * (highCarbonConsumption / totalHomeConsumption);
+      homeNonFossilCircumference = circleCircumference - (homeSolarCircumference || 0) - (homeBatteryCircumference || 0) - homeGridCircumference;
+    }
+
+    const hasNonFossilFuelUsage =
+      gridConsumption * 1 - this.getEntityState(entities.fossil_fuel_percentage?.entity) / 100 > 0 &&
+      entities.fossil_fuel_percentage?.entity !== undefined &&
+      this.entityAvailable(entities.fossil_fuel_percentage?.entity);
+
+    const hasFossilFuelPercentage = entities.fossil_fuel_percentage?.show === true;
+
+
     return html`
       <ha-card .header=${this._config.title}>
         <div class="card-content" id="card-content">
@@ -963,7 +978,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                         ></ha-icon>
                         ${entities.fossil_fuel_percentage?.display_zero_state !== false ||
                         (nonFossilFuelenergy || 0) > (entities.fossil_fuel_percentage?.display_zero_tolerance || 0)
-                          ? html` <span class="low-carbon">${this.displayNonFossilState(entities!.fossil_fuel_percentage?.entity)}</span> `
+                          ? html` <span class="low-carbon">${this.displayValue(lowCarbonEnergy ?? null)}</span> `
                           : ''}
                       </div>
                       ${this.showLine(nonFossilFuelenergy || 0)

@@ -50,7 +50,7 @@ export interface EnergyFlowCardPlusConfig extends LovelaceCardConfig, mainConfig
       secondary_info?: SecondaryInfoType;
     };
     fossil_fuel_percentage?: baseConfigEntity & {
-      entity: string;
+      show?: boolean;
       color?: string;
       state_type?: 'percentage' | 'energy';
       color_icon?: boolean;
