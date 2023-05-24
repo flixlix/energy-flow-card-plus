@@ -206,7 +206,8 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 
 | Name        | Type    | Default  | Description                                                                                       |
 | ----------- | ------- | -------- | ------------------------------------------------------------------------------------------------- |
-| entity           | `string` | `none` required | Entity ID providing a state with the value of the percentage of fossil fuel consumption. The state should be `100` when all the energy from the grid comes from high emission sources and `0` when all the energy from the grid comes from low emission sources. It is recommended to use the CO2 Signal integration, which provides this sensor out of the box without any additional templating. This will also be the entity used in the more-info dialogs. |
+| show | `boolean` | `false` | If set to `true`, the fossil fuel section will be displayed. This information is probvided by the HA Energy Integration, so make sure you have it and CO2-Signal set up correctly. |
+| entity           | `string` | `none` | Entity ID for opening the more info dialog. |
 | name        | `string` | Low-carbon | Name to appear as a label on top of the circle. |
 | icon | `string`            | `mdi:leaf` | Icon path (eg: `mdi:home`) to display inside the circle of the device. |
 | color          | `string`        | `#0f9d58` |  HEX Value of a color to display as the stroke of the circle and line connecting to the grid. |
