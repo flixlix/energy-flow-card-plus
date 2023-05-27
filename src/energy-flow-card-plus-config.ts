@@ -60,6 +60,7 @@ export interface EnergyFlowCardPlusConfig extends LovelaceCardConfig, mainConfig
       color_value?: boolean;
       color_label?: boolean;
       unit_white_space?: boolean;
+      decimals?: number;
       calculate_flow_rate?: boolean | number;
       seconday_info: SecondaryInfoType;
     };
