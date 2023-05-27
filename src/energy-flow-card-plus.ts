@@ -1430,7 +1430,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                             >
                               ${this.displayValue(
                                 batteryChargeState,
-                                this._config.entities?.battery?.state_of_charge_unit_of_measurement || '%',
+                                this._config.entities?.battery?.state_of_charge_unit || '%',
                                 this._config.entities?.battery?.state_of_charge_unit_white_space,
                                 this._config.entities?.battery?.state_of_charge_decimals || 0,
                               )}
