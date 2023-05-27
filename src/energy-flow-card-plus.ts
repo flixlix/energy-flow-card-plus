@@ -206,12 +206,19 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return value;
   };
 
+  /*
+   * Display value with unit
+   * @param value - value to display (if text, will be returned as is)
+   * @param unit - unit to display (default is dynamic)
+   * @param unitWhiteSpace - wether add space between value and unit (default true)
+   * @param decimals - number of decimals to display (default is user defined)
+   */
   private displayValue = (
     value: number | string | null,
     unit?: string | undefined,
     unitWhiteSpace?: boolean | undefined,
     decimals?: number | undefined,
-  ) => {
+  ): string | number => {
     if (value === null) return '0';
     if (Number.isNaN(+value)) return value;
     const valueInNumber = Number(value);
@@ -221,43 +228,6 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       this.hass.locale,
     );
     return `${v}${unitWhiteSpace === false ? '' : ' '}${unit || (isKWh ? 'kWh' : 'Wh')}`;
-  };
-
-  private displayNonFossilState = (entityFossil: string): string | number => {
-    if (!entityFossil || !this.entityAvailable(entityFossil)) {
-      this.unavailableOrMisconfiguredError(entityFossil);
-      return 'NaN';
-    }
-    const unitWhiteSpace = this._config!.entities.fossil_fuel_percentage?.unit_white_space ?? true;
-    const unitOfMeasurement: 'Wh' | '%' = this._config!.entities.fossil_fuel_percentage?.state_type === 'percentage' ? '%' : 'Wh' || 'Wh';
-    const nonFossilFuelDecimal: number = 1 - this.getEntityState(entityFossil) / 100;
-    const gridConsumption = this.getEntityStateWatthours(this._config!.entities!.grid!.entity!.consumption) || 0;
-
-    /* based on choice, change output from watts to % */
-    let result: string | number;
-    const displayZeroTolerance = this._config.entities.fossil_fuel_percentage?.display_zero_tolerance ?? 0;
-    if (this._config.entities.fossil_fuel_percentage.state_type !== 'percentage') {
-      let nonFossilFuelWatthours = gridConsumption * nonFossilFuelDecimal;
-      if (displayZeroTolerance) {
-        if (nonFossilFuelWatthours < displayZeroTolerance) {
-          nonFossilFuelWatthours = 0;
-        }
-      }
-      result = this.displayValue(nonFossilFuelWatthours);
-    } else {
-      let nonFossilFuelPercentage: number = 100 - this.getEntityState(entityFossil);
-      if (displayZeroTolerance) {
-        if (nonFossilFuelPercentage < displayZeroTolerance) {
-          nonFossilFuelPercentage = 0;
-        }
-      }
-      result = nonFossilFuelPercentage
-        .toFixed(0)
-        .toString()
-        .concat(unitWhiteSpace === false ? '' : ' ')
-        .concat(unitOfMeasurement);
-    }
-    return result;
   };
 
   private openDetails(entityId?: string | undefined, instantaneousValue?: boolean): void {
@@ -1458,10 +1428,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                               }}
                               id="battery-state-of-charge-text"
                             >
-                              ${formatNumber(batteryChargeState, this.hass.locale, {
-                                maximumFractionDigits: 0,
-                                minimumFractionDigits: 0,
-                              })}${this._config.entities?.battery?.state_of_charge_unit_white_space === false ? '' : ' '}%
+                              ${this.displayValue(
+                                batteryChargeState,
+                                this._config.entities?.battery?.state_of_charge_unit_of_measurement || '%',
+                                this._config.entities?.battery?.state_of_charge_unit_white_space,
+                                this._config.entities?.battery?.state_of_charge_decimals || 0,
+                              )}
                             </span>`
                           : null}
                         <ha-icon
