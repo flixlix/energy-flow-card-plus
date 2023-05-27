@@ -291,7 +291,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       return html``;
     }
 
-    if (!this._data) {
+    if (!this._data && this._config.energy_date_selection !== false) {
       return html`${this.hass.localize('ui.panel.lovelace.cards.energy.loading')}`;
     }
 
@@ -891,7 +891,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         : this.displayValue(totalHomeConsumption);
 
     let lowCarbonPercentage: number | undefined;
-    if (this._data.co2SignalEntity && this._data.fossilEnergyConsumption) {
+    if (this._data && this._data.co2SignalEntity && this._data.fossilEnergyConsumption) {
       // Calculate high carbon consumption
       const highCarbonEnergy = Object.values(this._data.fossilEnergyConsumption).reduce((sum, a) => sum + a, 0) * 1000;
 
