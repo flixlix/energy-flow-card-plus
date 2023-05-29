@@ -167,6 +167,11 @@ export const advancedOptionsSchema = [
             selector: { boolean: {} },
           },
           {
+            name: 'energy_date_selection',
+            label: 'Energy Date Selection',
+            selector: { boolean: {} },
+          },
+          {
             name: 'use_new_flow_rate_model',
             label: 'New Flow Model?',
             selector: { boolean: {} },
