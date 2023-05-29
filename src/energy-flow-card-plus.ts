@@ -883,6 +883,11 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
 
     const hasFossilFuelPercentage = entities.fossil_fuel_percentage?.show === true;
 
+    if (this._config.energy_date_selection === false) {
+      lowCarbonPercentage = 100 - this.getEntityState(this._config.entities.fossil_fuel_percentage.entity, true);
+      lowCarbonEnergy = (lowCarbonPercentage * totalFromGrid) / 100;
+    }
+
     return html`
       <ha-card .header=${this._config.title}>
         <div class="card-content" id="card-content">
