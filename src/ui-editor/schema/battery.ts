@@ -2,32 +2,61 @@ import { getEntitySeparatedSelectionSchema, getBaseMainConfigSchema, customColor
 
 const mainSchema = {
   ...getBaseMainConfigSchema('battery'),
-  schema: [
-    ...getBaseMainConfigSchema('battery').schema,
-    {
-      name: 'color_state_of_charge_value',
-      label: 'Color State of Charge Value',
-      selector: {
-        select: {
-          options: [
-            { value: false, label: 'Do Not Color' },
-            { value: true, label: 'Color dynamically' },
-            { value: 'consumption', label: 'Consumption' },
-            { value: 'production', label: 'Production' },
-          ],
-          custom_value: true,
-        },
-      },
-    },
-  ],
+  schema: [...getBaseMainConfigSchema('battery').schema],
 };
 
-export const batterySchema = [
-  getEntitySeparatedSelectionSchema('battery'),
+const stateOfChargeSchema = [
   {
     name: 'state_of_charge',
     label: 'State of Charge Entity',
     selector: { entity: {} },
+  },
+  {
+    name: '',
+    type: 'grid',
+    column_min_width: '200px',
+    schema: [
+      {
+        name: 'state_of_charge_unit',
+        label: 'State of Charge Unit',
+        selector: { text: {} },
+      },
+      {
+        name: 'state_of_charge_unit_white_space',
+        label: 'State of Charge Unit White Space',
+        selector: { boolean: {} },
+      },
+      {
+        name: 'state_of_charge_decimals',
+        label: 'State of Charge Decimals',
+        selector: { number: { mode: 'box', min: 0, max: 4, step: 1 } },
+      },
+      {
+        name: 'color_state_of_charge_value',
+        label: 'Color State of Charge Value',
+        selector: {
+          select: {
+            options: [
+              { value: false, label: 'Do Not Color' },
+              { value: true, label: 'Color dynamically' },
+              { value: 'consumption', label: 'Consumption' },
+              { value: 'production', label: 'Production' },
+            ],
+            custom_value: true,
+          },
+        },
+      },
+    ],
+  },
+];
+
+export const batterySchema = [
+  getEntitySeparatedSelectionSchema('battery'),
+  {
+    title: 'State of Charge',
+    name: '',
+    type: 'expandable',
+    schema: stateOfChargeSchema,
   },
   mainSchema,
   customColorsSchema,

@@ -21,9 +21,11 @@ export interface EnergyFlowCardPlusConfig extends LovelaceCardConfig, mainConfig
   entities: {
     battery?: baseConfigEntity & {
       state_of_charge?: string;
+      state_of_charge_unit?: string;
+      state_of_charge_unit_white_space?: boolean;
+      state_of_charge_decimals?: number;
       color_state_of_charge_value?: boolean | 'production' | 'consumption';
       color_circle?: boolean | 'production' | 'consumption';
-      state_of_charge_unit_white_space?: boolean;
       color?: ComboEntity;
     };
     grid?: baseConfigEntity & {
