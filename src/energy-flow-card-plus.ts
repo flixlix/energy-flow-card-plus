@@ -262,7 +262,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     }
 
     if (!this._data && this._config.energy_date_selection !== false) {
-      return html`${this.hass.localize('ui.panel.lovelace.cards.energy.loading')}`;
+      return html`<ha-card style="padding: 2rem">
+        ${this.hass.localize('ui.panel.lovelace.cards.energy.loading')}<br />Make sure you have the Energy Integration setup and a Date Selector in
+        this View or set
+        <pre>energy_date_selection: false</pre>
+        .</ha-card
+      >`;
     }
 
     const { entities } = this._config;
