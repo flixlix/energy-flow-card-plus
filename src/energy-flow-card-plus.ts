@@ -976,9 +976,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                         ${entities.fossil_fuel_percentage?.display_zero_state !== false || hasNonFossilFuelUsage !== false
                           ? html`
                               <span class="low-carbon"
-                                >${entities.fossil_fuel_percentage?.state_type === 'percentage'
-                                  ? lowCarbonPercentage?.toFixed(0) + '%' || '0%'
-                                  : this.displayValue(lowCarbonEnergy ?? null)}</span
+                                >${this.displayValue(
+                                  entities.fossil_fuel_percentage?.state_type === 'percentage' ? lowCarbonPercentage || 0 : lowCarbonEnergy || 0,
+                                  entities.fossil_fuel_percentage?.state_type === 'percentage' ? '%' : undefined,
+                                  entities.fossil_fuel_percentage?.unit_white_space,
+                                  entities.fossil_fuel_percentage?.decimals,
+                                )}</span
                               >
                             `
                           : ''}
