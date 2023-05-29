@@ -206,8 +206,8 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return value;
   };
 
-  /*
-   * Display value with unit
+  /**
+   * Return a string to display with value and unit.
    * @param value - value to display (if text, will be returned as is)
    * @param unit - unit to display (default is dynamic)
    * @param unitWhiteSpace - wether add space between value and unit (default true)
@@ -218,9 +218,9 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     unit?: string | undefined,
     unitWhiteSpace?: boolean | undefined,
     decimals?: number | undefined,
-  ): string | number => {
+  ): string => {
     if (value === null) return '0';
-    if (Number.isNaN(+value)) return value;
+    if (Number.isNaN(+value)) return value.toString();
     const valueInNumber = Number(value);
     const isKWh = unit === undefined && valueInNumber >= this._config!.wh_kwh_threshold;
     const v = formatNumber(
