@@ -77,6 +77,7 @@ export const secondaryInfoSchema = [
       { name: 'unit_white_space', label: 'Unit White Space', selector: { boolean: {} } },
       { name: 'display_zero', label: 'Display Zero', selector: { boolean: {} } },
       { name: 'display_zero_tolerance', label: 'Display Zero Tolerance', selector: { number: { mode: 'box', min: 0, max: 1000000, step: 0.1 } } },
+      { name: 'energy_date_selection', label: 'Energy Date Selection', selector: { boolean: {} } },
     ],
   },
 ] as const;

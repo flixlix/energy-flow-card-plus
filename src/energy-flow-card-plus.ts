@@ -105,7 +105,6 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     }
     this._config = {
       ...config,
-      inverted_entities: coerceStringArray(config.inverted_entities, ','),
       kwh_decimals: coerceNumber(config.kwh_decimals, defaultValues.kilowatthourDecimals),
       min_flow_rate: coerceNumber(config.min_flow_rate, defaultValues.minFlowRate),
       max_flow_rate: coerceNumber(config.max_flow_rate, defaultValues.maxFlowRate),
