@@ -50,16 +50,18 @@
         "color": "Color",
         "dashboard_link": "Dashboard Link",
         "dashboard_link_label": "Dashboard Link Name",
-        "w_decimals": "Watt Decimals",
-        "kw_decimals": "Kilowatt Decimals",
+        "wh_decimals": "Watthours Decimals",
+        "kwh_decimals": "Kilowatthours Decimals",
         "max_flow_rate": "Max Flow Rate",
         "min_flow_rate": "Min Flow Rate",
-        "max_expected_power": "Max Expected Power",
-        "min_expected_power": "Min Expected Power",
-        "watt_threshold": "Watt to Kilowatt Threshold",
+        "max_expected_energy": "Max Expected Energy",
+        "min_expected_energy": "Min Expected Energy",
+        "wh_kwh_threshold": "Watthours to Kilowatthours Threshold",
         "display_zero_lines": "Display Zero Lines",
         "clickable_entities": "Clickable Entities",
         "use_new_flow_rate_model": "New Flow Rate Model",
-        "use_metadata": "Use Metadata"
+        "use_metadata": "Use Metadata",
+        "energy_date_selection": "Energy Date Selection",
+        "show": "Show"
     }
 }

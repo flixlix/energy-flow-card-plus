@@ -1,8 +1,22 @@
-import { getEntitySeparatedSelectionSchema, getBaseMainConfigSchema, customColorsSchema } from './_schema-base';
+import { getEntitySeparatedSelectionSchema, getBaseMainConfigSchema, customColorsSchema, getEntityCombinedSelectionSchema } from './_schema-base';
+import localize from '../../localize/localize';
 
 const mainSchema = {
   ...getBaseMainConfigSchema('battery'),
-  schema: [...getBaseMainConfigSchema('battery').schema],
+
+  schema: [
+    ...getBaseMainConfigSchema('battery').schema,
+    {
+      name: 'invert_state',
+      label: 'Invert State',
+      selector: { boolean: {} },
+    },
+    {
+      name: 'use_metadata',
+      label: 'Use Metadata',
+      selector: { boolean: {} },
+    },
+  ],
 };
 
 const stateOfChargeSchema = [
@@ -18,22 +32,22 @@ const stateOfChargeSchema = [
     schema: [
       {
         name: 'state_of_charge_unit',
-        label: 'State of Charge Unit',
+        label: 'Unit',
         selector: { text: {} },
       },
       {
         name: 'state_of_charge_unit_white_space',
-        label: 'State of Charge Unit White Space',
+        label: 'Unit White Space',
         selector: { boolean: {} },
       },
       {
         name: 'state_of_charge_decimals',
-        label: 'State of Charge Decimals',
+        label: 'Decimals',
         selector: { number: { mode: 'box', min: 0, max: 4, step: 1 } },
       },
       {
         name: 'color_state_of_charge_value',
-        label: 'Color State of Charge Value',
+        label: 'Color of Value',
         selector: {
           select: {
             options: [
@@ -51,9 +65,9 @@ const stateOfChargeSchema = [
 ];
 
 export const batterySchema = [
-  getEntitySeparatedSelectionSchema('battery'),
+  getEntitySeparatedSelectionSchema(),
   {
-    title: 'State of Charge',
+    title: localize('editor.state_of_charge'),
     name: '',
     type: 'expandable',
     schema: stateOfChargeSchema,
