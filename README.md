@@ -139,7 +139,7 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 
 | Name        | Type    | Default  | Description                                                                                       |
 | ----------- | ------- | -------- | ------------------------------------------------------------------------------------------------- |
-| entity | `object` | `undefined` required | Object containing `production` and/or `consumption` properties with an Entity ID of a sensor supporting a state with positive values. Check [split entites](#split-entities) for more info. |
+| entity | `object` | `undefined` required | Object containing `production` and/or `consumption` properties with one or a list of Entity IDs of a sensor supporting a state with positive values. Check [split entites](#split-entities) for more info. |
 | name  | `string` | `Grid` | If you don't populate this option, the label will continue to update based on the language selected. |
 | icon | `string` | `mdi:transmission-tower` | Icon path for the icon inside the Grid Circle. |
 | color | `object` |  | Check [Color Objects](#color-object) for more information. |
@@ -151,7 +151,7 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 
 | Name        | Type    | Default  | Description                                                                                       |
 | ----------- | ------- | -------- | ------------------------------------------------------------------------------------------------- |
-| entity | `string` | `undefined` required | Entity ID providing a state with the value of solar production. |
+| entity | `string` | `undefined` required | One or a list of Entity IDs providing a state with the value of solar production. |
 | name  | `string` | `Solar` | Label for the solar option. If you don't populate this option, the label will continue to update based on the language selected. |
 | icon | `string` | `mdi:solar-power` | Icon path for the icon inside the Solar Circle. |
 | color | `string` |  | HEX value of the color for circles labels and lines of solar production. |
@@ -164,7 +164,7 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 
 | Name        | Type    | Default  | Description                                                                                       |
 | ----------- | ------- | -------- | ------------------------------------------------------------------------------------------------- |
-| entity | `object` | `undefined` required | Object containing `production` and/or `consumption` properties with an Entity ID of a sensor supporting a state with positive values. Check [split entites](#split-entities) for more info. |
+| entity | `object` | `undefined` required | Object containing `production` and/or `consumption` properties with one or a list of Entity IDs of a sensor supporting a state with positive values. Check [split entites](#split-entities) for more info. |
 | state_of_charge | `string` | `undefined` required | Entity ID providing a state with the state of charge of the battery in percent (state of  `100` for a full battery). |
 | state_of_charge_unit | `string` | `%` | Unit of the state of charge. |
 | state_of_charge_unit_white_space | `boolean` | `true` | If set to `false`, the unit of the state of charge will not have a white space in front of it. |
@@ -181,7 +181,7 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 
 | Name        | Type    | Default  | Description                                                                                       |
 | ----------- | ------- | -------- | ------------------------------------------------------------------------------------------------- |
-| entity | `string` | `undefined` required | Entity ID providing a state with the value of an individual consumption. |
+| entity | `string` | `undefined` required | One or a list of Entity IDs providing a state with the value of an individual consumption. |
 | name  | `string` | `Car` or `Motorcycle` | Label for the individual device option. If you don't populate this option, the label will continue to update based on the language selected. |
 | icon | `string` | `mdi:car-electric` or `mdi:motorbike-electric` | Icon path for the icon inside the Individual Device Circle. |
 | color | `string` | `#d0cc5b` or `#964cb5` | HEX value of the color for circles labels and lines of the individual device. |
@@ -198,7 +198,7 @@ At least one of _grid_, _battery_, or _solar_ is required. All entites (except _
 
 | Name        | Type    | Default  | Description                                                                                       |
 | ----------- | ------- | -------- | ------------------------------------------------------------------------------------------------- |
-| entity | `string` | `undefined` required | Entity ID providing a state with the value of your home's consumption. Note that this entity will not be displayed and will only be used for the more info dialog when clicking the home section. |
+| entity | `string` | `undefined` required | One or a list of Entity IDs providing a state with the value of your home's consumption. Note that this entity will not be displayed and will only be used for the more info dialog when clicking the home section. |
 | name  | `string` | `Home` | Label for the home option. If you don't populate this option, the label will continue to update based on the language selected. |
 | icon | `string` | `mdi:home` | Icon path for the icon inside the Home Circle. |
 | color_icon | `boolean` or "solar" or "grid" or "battery" | `false` | If set to `true`, icon color will match the highest value. If set to `solar`, icon color will match the color of solar. If set to `grid`, icon color will match the color of the grid consumption. If set to `battery`, icon color will match the color of the battery consumption. |
