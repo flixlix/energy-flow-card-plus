@@ -2,7 +2,7 @@
 import { LitElement, html, TemplateResult, svg, PropertyValues } from 'lit';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { customElement, property, query, state } from 'lit/decorators';
-import type { Config, EntityType } from './types';
+import type { Config, EntityType, baseEntity } from './types';
 import { localize } from './localize/localize';
 import { coerceNumber, coerceStringArray, isNumberValue, renderError } from './utils';
 import { SubscribeMixin } from './energy/subscribe-mixin';
@@ -196,15 +196,25 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return coerceNumber(stateObj.state);
   };
 
-  private getEntityStateWatthours = (entity: string | undefined): number => {
-    if (!entity || !this.entityAvailable(entity)) {
-      this.unavailableOrMisconfiguredError(entity);
-      return 0;
+  private getEntityStateWatthours = (entity: baseEntity | undefined): number => {
+    let entityArr: string[] = [];
+    if (typeof entity === 'string') {
+      entityArr.push(entity);
+    } else if (Array.isArray(entity)) {
+      entityArr = entity;
     }
-    const stateObj = this._config?.energy_date_selection !== false ? this.states[entity] : this.hass?.states[entity];
-    const value = coerceNumber(stateObj?.state);
-    if (stateObj?.attributes.unit_of_measurement?.toUpperCase().startsWith('KWH')) return value * 1000; // case insensitive check `KWH`
-    return value;
+    let total = 0;
+    entityArr.forEach(entity => {
+      if (!entity || !this.entityAvailable(entity)) {
+        this.unavailableOrMisconfiguredError(entity);
+      }
+      const stateObj = this._config?.energy_date_selection !== false ? this.states[entity] : this.hass?.states[entity];
+      const value = coerceNumber(stateObj?.state);
+      if (stateObj?.attributes.unit_of_measurement?.toUpperCase().startsWith('KWH')) return value * 1000; // case insensitive check `KWH`
+      total += value;
+      return total;
+    });
+    return total;
   };
 
   /**
@@ -370,6 +380,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
 
     const solar = {
       entity: entities.solar?.entity as string | undefined,
+      mainEntity: Array.isArray(entities.solar?.entity) ? entities.solar?.entity[0] : entities.solar?.entity,
       has: entities.solar?.entity !== undefined,
       state: {
         total: initialNumericState,
@@ -419,6 +430,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
 
     const home = {
       entity: entities.home?.entity,
+      mainEntity: Array.isArray(entities.home?.entity) ? entities.home?.entity[0] : entities.home?.entity,
       has: entities?.home?.entity !== undefined,
       state: initialNumericState,
       icon: this.computeFieldIcon(entities?.home, 'mdi:home'),
@@ -440,6 +452,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
 
     const getIndividualObject = (field: 'individual1' | 'individual2') => ({
       entity: entities[field]?.entity,
+      mainEntity: Array.isArray(entities[field]?.entity) ? entities[field]?.entity[0] : (entities[field]?.entity as string | undefined),
       has: this.hasField(entities[field]),
       displayZero: entities[field]?.display_zero,
       displayZeroTolerance: entities[field]?.display_zero_tolerance,
@@ -473,6 +486,9 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
 
     const nonFossil = {
       entity: entities.fossil_fuel_percentage?.entity,
+      mainEntity: Array.isArray(entities.fossil_fuel_percentage?.entity)
+        ? entities.fossil_fuel_percentage?.entity[0]
+        : entities.fossil_fuel_percentage?.entity,
       name:
         entities.fossil_fuel_percentage?.name ||
         (entities.fossil_fuel_percentage?.use_metadata && this.getEntityStateObj(entities.fossil_fuel_percentage.entity)?.attributes.friendly_name) ||
@@ -949,19 +965,18 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     }
 
     const solarIcon =
-      entities.solar?.icon || (entities.solar?.use_metadata && this.getEntityStateObj(entities.solar.entity)?.attributes?.icon) || 'mdi:solar-power';
+      entities.solar?.icon || (entities.solar?.use_metadata && this.getEntityStateObj(solar.mainEntity)?.attributes?.icon) || 'mdi:solar-power';
 
     const solarName: string =
       entities.solar?.name ||
-      (entities.solar?.use_metadata && this.getEntityStateObj(entities.solar.entity)?.attributes.friendly_name) ||
+      (entities.solar?.use_metadata && this.getEntityStateObj(solar.mainEntity)?.attributes.friendly_name) ||
       this.hass.localize('ui.panel.lovelace.cards.energy.energy_distribution.solar');
 
-    const homeIcon =
-      entities.home?.icon || (entities.home?.use_metadata && this.getEntityStateObj(entities.home.entity)?.attributes?.icon) || 'mdi:home';
+    const homeIcon = entities.home?.icon || (entities.home?.use_metadata && this.getEntityStateObj(home.mainEntity)?.attributes?.icon) || 'mdi:home';
 
     const homeName =
       entities.home?.name ||
-      (entities.home?.use_metadata && this.getEntityStateObj(entities.home.entity)?.attributes.friendly_name) ||
+      (entities.home?.use_metadata && this.getEntityStateObj(home.mainEntity)?.attributes.friendly_name) ||
       this.hass.localize('ui.panel.lovelace.cards.energy.energy_distribution.home');
 
     const nonFossilIcon =
@@ -1166,12 +1181,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                         class="circle"
                         @click=${(e: { stopPropagation: () => void }) => {
                           e.stopPropagation();
-                          this.openDetails(entities.solar!.entity);
+                          this.openDetails(solar.mainEntity);
                         }}
                         @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                           if (e.key === 'Enter') {
                             e.stopPropagation();
-                            this.openDetails(entities.solar!.entity);
+                            this.openDetails(solar.mainEntity);
                           }
                         }}
                       >
@@ -1225,12 +1240,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                         class="circle"
                         @click=${(e: { stopPropagation: () => void }) => {
                           e.stopPropagation();
-                          this.openDetails(entities.individual2?.entity);
+                          this.openDetails(individual2.mainEntity);
                         }}
                         @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                           if (e.key === 'Enter') {
                             e.stopPropagation();
-                            this.openDetails(entities.individual2?.entity);
+                            this.openDetails(individual2.mainEntity);
                           }
                         }}
                       >
@@ -1304,12 +1319,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                         class="circle"
                         @click=${(e: { stopPropagation: () => void }) => {
                           e.stopPropagation();
-                          this.openDetails(entities.individual1?.entity);
+                          this.openDetails(individual1.mainEntity);
                         }}
                         @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                           if (e.key === 'Enter') {
                             e.stopPropagation();
-                            this.openDetails(entities.individual1?.entity);
+                            this.openDetails(individual1.mainEntity);
                           }
                         }}
                       >
@@ -1481,12 +1496,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                 id="home-circle"
                 @click=${(e: { stopPropagation: () => void }) => {
                   e.stopPropagation();
-                  this.openDetails(entities.home?.entity);
+                  this.openDetails(home.mainEntity);
                 }}
                 @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                   if (e.key === 'Enter') {
                     e.stopPropagation();
-                    this.openDetails(entities.home?.entity);
+                    this.openDetails(home.mainEntity);
                   }
                 }}
               >
@@ -1723,12 +1738,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                         class="circle"
                         @click=${(e: { stopPropagation: () => void }) => {
                           e.stopPropagation();
-                          this.openDetails(entities.individual1?.entity);
+                          this.openDetails(individual1.mainEntity);
                         }}
                         @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                           if (e.key === 'Enter') {
                             e.stopPropagation();
-                            this.openDetails(entities.individual1?.entity);
+                            this.openDetails(individual1.mainEntity);
                           }
                         }}
                       >

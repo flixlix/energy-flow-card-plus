@@ -203,7 +203,7 @@ export type gridPowerOutage = {
 };
 
 export type IndividualDeviceType = {
-  entity: string;
+  entity: baseEntity;
   name?: string;
   icon?: string;
   color?: string;
@@ -235,3 +235,5 @@ export type EntityType =
   | 'homeSecondary'
   | 'gridSecondary'
   | 'nonFossilSecondary';
+
+export type baseEntity = string | string[];
