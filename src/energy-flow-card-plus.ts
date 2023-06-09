@@ -3,7 +3,7 @@ import { LitElement, html, TemplateResult, svg, PropertyValues } from 'lit';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { customElement, property, query, state } from 'lit/decorators';
 import type { Config, EntityType, baseEntity } from './types';
-import { localize } from './localize/localize';
+import localize from './localize/localize';
 import { coerceNumber, coerceStringArray, isNumberValue, renderError } from './utils';
 import { SubscribeMixin } from './energy/subscribe-mixin';
 import { HassEntities, HassEntity } from 'home-assistant-js-websocket';
@@ -196,25 +196,23 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return coerceNumber(stateObj.state);
   };
 
-  private getEntityStateWatthours = (entity: baseEntity | undefined): number => {
-    let entityArr: string[] = [];
-    if (typeof entity === 'string') {
-      entityArr.push(entity);
-    } else if (Array.isArray(entity)) {
-      entityArr = entity;
+  private getEntityStateWatthours = (entity: string | undefined, instantaneousValue?: boolean): number => {
+    if (!entity || !this.entityAvailable(entity)) {
+      this.unavailableOrMisconfiguredError(entity);
+      return 0;
     }
-    let total = 0;
-    entityArr.forEach(entity => {
-      if (!entity || !this.entityAvailable(entity)) {
-        this.unavailableOrMisconfiguredError(entity);
-      }
-      const stateObj = this._config?.energy_date_selection !== false ? this.states[entity] : this.hass?.states[entity];
-      const value = coerceNumber(stateObj?.state);
-      if (stateObj?.attributes.unit_of_measurement?.toUpperCase().startsWith('KWH')) return value * 1000; // case insensitive check `KWH`
-      total += value;
-      return total;
-    });
-    return total;
+    let stateObj: HassEntity | undefined;
+    if (instantaneousValue === undefined) {
+      stateObj = this._config.energy_date_selection !== false ? this.states[entity] : this.hass?.states[entity];
+    } else if (instantaneousValue) {
+      stateObj = this.hass?.states[entity];
+    } else {
+      stateObj = this.states[entity];
+    }
+
+    const value = coerceNumber(stateObj?.state);
+    if (stateObj?.attributes.unit_of_measurement?.toUpperCase().startsWith('KWH')) return value * 1000; // case insensitive check `KWH`
+    return value;
   };
 
   /**
@@ -308,6 +306,38 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return '#'.concat(colorList.map(x => x.toString(16).padStart(2, '0')).join(''));
   }
 
+  private getSecondaryState = (
+    field: {
+      entity: any;
+      template?: string | undefined;
+      has: any;
+      state?: string | number | null;
+      icon?: string | undefined;
+      unit?: string | undefined;
+      unit_white_space?: boolean | undefined;
+      displayZero?: boolean | undefined;
+      displayZeroTolerance?: number | undefined;
+      energyDateSelection?: boolean;
+    },
+    name: EntityType,
+  ): string | number | null => {
+    if (field.has) {
+      const secondaryEntity = field?.entity;
+      const wantsInstantaneousValue = field?.energyDateSelection !== true;
+      const secondaryState = secondaryEntity && this.getEntityStateWatthours(secondaryEntity, wantsInstantaneousValue);
+      if (typeof secondaryState === 'number') {
+        if (this.entityInverted(name)) {
+          return Math.abs(Math.min(secondaryState, 0));
+        } else {
+          return Math.max(secondaryState, 0);
+        }
+      } else if (typeof secondaryState === 'string') {
+        return secondaryState;
+      }
+    }
+    return null;
+  };
+
   protected render(): TemplateResult {
     if (!this._config || !this.hass) {
       return html``;
@@ -372,6 +402,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         icon: entities.grid?.secondary_info?.icon,
         unit: entities.grid?.secondary_info?.unit_of_measurement,
         unit_white_space: entities.grid?.secondary_info?.unit_white_space,
+        energyDateSelection: entities.grid?.secondary_info?.energy_date_selection || false,
         color: {
           type: entities.grid?.secondary_info?.color_value,
         },
@@ -398,6 +429,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         icon: entities.solar?.secondary_info?.icon,
         unit: entities.solar?.secondary_info?.unit_of_measurement,
         unit_white_space: entities.solar?.secondary_info?.unit_white_space,
+        energyDateSelection: entities.solar?.secondary_info?.energy_date_selection || false,
       },
     };
 
@@ -447,6 +479,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         unit_white_space: entities.home?.secondary_info?.unit_white_space,
         icon: entities.home?.secondary_info?.icon,
         decimals: entities.home?.secondary_info?.decimals,
+        energyDateSelection: entities.home?.secondary_info?.energy_date_selection || false,
       },
     };
 
@@ -475,6 +508,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         unit_white_space: entities[field]?.secondary_info?.unit_white_space,
         displayZero: entities[field]?.secondary_info?.display_zero,
         displayZeroTolerance: entities[field]?.secondary_info?.display_zero_tolerance,
+        energyDateSelection: entities[field]?.secondary_info?.energy_date_selection || false,
       },
     });
 
@@ -513,6 +547,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         unit: entities.fossil_fuel_percentage?.secondary_info?.unit_of_measurement,
         unit_white_space: entities.fossil_fuel_percentage?.secondary_info?.unit_white_space,
         color_value: entities.fossil_fuel_percentage?.secondary_info?.color_value,
+        energyDateSelection: entities.fossil_fuel_percentage?.secondary_info?.energy_date_selection || false,
       },
     };
 
@@ -546,16 +581,6 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     // Reset Grid Consumption if it is below the tolerance
     if (entities.grid?.display_zero_tolerance !== undefined && entities.grid?.display_zero_tolerance <= grid.state.fromGrid) {
       grid.state.fromGrid = 0;
-    }
-
-    // Update Secondary Info of Grid
-    if (grid.secondary.has) {
-      const gridSecondaryState = Number(this.hass.states[entities.grid?.secondary_info?.entity ?? 0].state);
-      if (this.entityInverted('gridSecondary')) {
-        grid.secondary.state = Math.abs(Math.min(gridSecondaryState, 0));
-      } else {
-        grid.secondary.state = Math.max(gridSecondaryState, 0);
-      }
     }
 
     // Update Color of Grid Production
@@ -630,11 +655,11 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     // Update and Set Color of Individuals
     if (individual1.color !== undefined) {
       if (typeof individual1.color === 'object') individual1.color = this.convertColorListToHex(individual1.color);
-      this.style.setProperty('--individualone-color', individual1.color); /* dynamically update color of entity depending on user's input */
+      this.style.setProperty('--individualone-color', individual1.color); // dynamically update color of entity depending on user's input
     }
     if (individual2.color !== undefined) {
       if (typeof individual2.color === 'object') individual2.color = this.convertColorListToHex(individual2.color);
-      this.style.setProperty('--individualtwo-color', individual2.color); /* dynamically update color of entity depending on user's input */
+      this.style.setProperty('--individualtwo-color', individual2.color); // dynamically update color of entity depending on user's input
     }
 
     // Update and Set Color of Individuals Icon
@@ -647,63 +672,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       entities.individual2?.color_icon ? 'var(--individualtwo-color)' : 'var(--primary-text-color)',
     );
 
-    // Update State Values of Individuals Secondary
-    if (individual1.secondary.has) {
-      const secondaryEntity = entities?.individual1?.secondary_info?.entity;
-      const secondaryState = secondaryEntity && this.hass.states[secondaryEntity].state;
-      if (typeof secondaryState === 'number') {
-        if (this.entityInverted('individual1Secondary')) {
-          individual1.secondary.state = Math.abs(Math.min(secondaryState, 0));
-        } else {
-          individual1.secondary.state = Math.max(secondaryState, 0);
-        }
-      } else if (typeof secondaryState === 'string') {
-        individual1.secondary.state = secondaryState;
-      }
-    }
-    if (individual2.secondary.has) {
-      const secondaryEntity = entities?.individual2?.secondary_info?.entity;
-      const secondaryState = secondaryEntity && this.hass.states[secondaryEntity].state;
-      if (typeof secondaryState === 'number') {
-        if (this.entityInverted('individual2Secondary')) {
-          individual2.secondary.state = Math.abs(Math.min(secondaryState, 0));
-        } else {
-          individual2.secondary.state = Math.max(secondaryState, 0);
-        }
-      } else if (typeof secondaryState === 'string') {
-        individual2.secondary.state = secondaryState;
-      }
-    }
-
-    // Update State Values of Solar Secondary
-    if (solar.secondary.has) {
-      const secondaryEntity = entities?.solar?.secondary_info?.entity;
-      const secondaryState = secondaryEntity && this.hass.states[secondaryEntity].state;
-      if (typeof secondaryState === 'number') {
-        if (this.entityInverted('individual2Secondary')) {
-          solar.secondary.state = Math.abs(Math.min(secondaryState, 0));
-        } else {
-          solar.secondary.state = Math.max(secondaryState, 0);
-        }
-      } else if (typeof secondaryState === 'string') {
-        solar.secondary.state = secondaryState;
-      }
-    }
-
-    // Update State Values of Home Secondary
-    if (home.secondary.has) {
-      const secondaryEntity = entities?.home?.secondary_info?.entity;
-      const secondaryState = secondaryEntity && this.hass.states[secondaryEntity].state;
-      if (typeof secondaryState === 'number') {
-        if (this.entityInverted('individual2Secondary')) {
-          home.secondary.state = Math.abs(Math.min(secondaryState, 0));
-        } else {
-          home.secondary.state = Math.max(secondaryState, 0);
-        }
-      } else if (typeof secondaryState === 'string') {
-        home.secondary.state = secondaryState;
-      }
-    }
+    individual1.secondary.state = this.getSecondaryState(individual1.secondary, 'individual1Secondary');
+    individual2.secondary.state = this.getSecondaryState(individual2.secondary, 'individual2Secondary');
+    solar.secondary.state = this.getSecondaryState(solar.secondary, 'solarSecondary');
+    home.secondary.state = this.getSecondaryState(home.secondary, 'homeSecondary');
+    nonFossil.secondary.state = this.getSecondaryState(nonFossil.secondary, 'nonFossilSecondary');
+    grid.secondary.state = this.getSecondaryState(grid.secondary, 'gridSecondary');
 
     // Update and Set Color of Solar
     if (entities.solar?.color !== undefined) {
@@ -845,19 +819,6 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     }
     let homeGridCircumference: number | undefined;
 
-    if (nonFossil.secondary.has) {
-      const secondaryEntity = entities.fossil_fuel_percentage?.secondary_info?.entity;
-      const secondaryState = secondaryEntity && this.hass.states[secondaryEntity].state;
-      if (typeof secondaryState === 'number') {
-        if (this.entityInverted('nonFossilSecondary')) {
-          nonFossil.secondary.state = Math.abs(Math.min(secondaryState, 0));
-        } else {
-          nonFossil.secondary.state = Math.max(secondaryState, 0);
-        }
-      } else if (typeof secondaryState === 'string') {
-        nonFossil.secondary.state = secondaryState;
-      }
-    }
     let lowCarbonEnergy: number | undefined;
     let nonFossilFuelenergy: number | undefined;
     let homeNonFossilCircumference: number | undefined;
