@@ -123,7 +123,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     this.entitiesArr = [];
     /* loop through entities object in config */
     Object.keys(this._config?.entities).forEach(entity => {
-      if (typeof this._config.entities[entity].entity === 'string') {
+      if (typeof this._config.entities[entity].entity === 'string' || Array.isArray(this._config.entities[entity].entity)) {
         if (Array.isArray(this._config.entities[entity].entity)) {
           this._config.entities[entity].entity.forEach((entityId: string) => {
             this.entitiesArr.push(entityId);
@@ -148,7 +148,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         }
       }
     });
-    console.log(this.entitiesArr);
+    this.entitiesArr = this.entitiesArr.filter(entity => entity !== undefined);
   }
 
   public getCardSize(): Promise<number> | number {
@@ -280,7 +280,9 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
   private hasField(field?: any, acceptStringState?: boolean): boolean {
     return (
       (field !== undefined && field?.display_zero === true) ||
-      (this.getEntityStateWatthours(field?.entity) > (field?.display_zero_tolerance ?? 0) && this.entityAvailable(field?.entity)) ||
+      (this.getEntityStateWatthours(field?.entity) > (field?.display_zero_tolerance ?? 0) && Array.isArray(field?.entity)
+        ? this.entityAvailable(field?.mainEntity)
+        : this.entityAvailable(field?.entity)) ||
       acceptStringState
         ? typeof this.hass.states[field?.entity]?.state === 'string'
         : false
