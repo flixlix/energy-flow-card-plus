@@ -179,6 +179,7 @@ export type SecondaryInfoType = {
   color_value?: boolean | 'production' | 'consumption';
   template?: string;
   decimals?: number;
+  energy_date_selection?: boolean;
 };
 
 export interface baseConfigEntity {
