@@ -1,4 +1,5 @@
 import { getBaseMainConfigSchema, secondaryInfoSchema } from './_schema-base';
+import localize from '../../localize/localize';
 
 const mainSchema = {
   ...getBaseMainConfigSchema(),
@@ -46,6 +47,11 @@ const mainSchema = {
       label: 'Override State (With Home Entity)',
       selector: { boolean: {} },
     },
+    {
+      name: 'use_metadata',
+      label: 'Use Metadata',
+      selector: { boolean: {} },
+    },
   ],
 };
 
@@ -56,7 +62,7 @@ export const homeSchema = [
   },
   mainSchema,
   {
-    title: 'Secondary Info',
+    title: localize('editor.secondary_info'),
     name: 'secondary_info',
     type: 'expandable',
     schema: secondaryInfoSchema,

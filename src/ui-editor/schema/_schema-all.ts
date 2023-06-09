@@ -5,6 +5,7 @@ import { solarSchema } from './solar';
 import { individualSchema } from './individual';
 import { nonFossilSchema } from './fossil_fuel_percentage';
 import { homeSchema } from './home';
+import memoizeOne from 'memoize-one';
 
 const baseLovelaceCardConfig = object({
   type: string(),
@@ -18,7 +19,6 @@ export const cardConfigStruct = assign(
     theme: optional(string()),
     dashboard_link: optional(string()),
     dashboard_link_label: optional(string()),
-    inverted_entities: optional(any()),
     wh_decimals: optional(integer()),
     kwh_decimals: optional(integer()),
     min_flow_rate: optional(number()),
@@ -50,61 +50,61 @@ export const generalConfigSchema = [
   },
 ] as const;
 
-export const entitiesSchema = [
+export const entitiesSchema = memoizeOne(localize => [
   {
     name: 'entities',
     type: 'grid',
     column_min_width: '400px',
     schema: [
       {
-        title: 'Grid',
+        title: localize('editor.grid'),
         name: 'grid',
         type: 'expandable',
         schema: gridSchema,
       },
       {
-        title: 'Solar',
+        title: localize('editor.solar'),
         name: 'solar',
         type: 'expandable',
         schema: solarSchema,
       },
       {
-        title: 'Battery',
+        title: localize('editor.battery'),
         name: 'battery',
         type: 'expandable',
         schema: batterySchema,
       },
       {
-        title: 'Non-Fossil',
+        title: localize('editor.fossil_fuel_percentage'),
         name: 'fossil_fuel_percentage',
         type: 'expandable',
         schema: nonFossilSchema,
       },
       {
-        title: 'Home',
+        title: localize('editor.home'),
         name: 'home',
         type: 'expandable',
         schema: homeSchema,
       },
       {
-        title: 'Individual 1',
+        title: `${localize('editor.individual')} 1`,
         name: 'individual1',
         type: 'expandable',
         schema: individualSchema,
       },
       {
-        title: 'Individual 2',
+        title: `${localize('editor.individual')} 2`,
         name: 'individual2',
         type: 'expandable',
         schema: individualSchema,
       },
     ],
   },
-];
+]);
 
-export const advancedOptionsSchema = [
+export const advancedOptionsSchema = memoizeOne(localize => [
   {
-    title: 'Advanced Options',
+    title: localize('editor.advanced'),
     type: 'expandable',
     schema: [
       {
@@ -178,11 +178,6 @@ export const advancedOptionsSchema = [
           },
         ],
       },
-      {
-        name: 'inverted_entities',
-        label: 'Inverted Entities',
-        selector: { template: {} },
-      },
     ],
   },
-];
+]);
