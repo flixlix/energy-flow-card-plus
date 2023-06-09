@@ -265,7 +265,8 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return `${v}${unitWhiteSpace === false ? '' : ' '}${unit || (isKWh ? 'kWh' : 'Wh')}`;
   };
 
-  private openDetails(entityId?: string | undefined, instantaneousValue?: boolean): void {
+  private openDetails(event: { stopPropagation: any; key?: string }, entityId?: string | undefined): void {
+    event.stopPropagation();
     if (!entityId || !this._config.clickable_entities) return;
     /* also needs to open details if entity is unavailable, but not if entity doesn't exist is hass states */
     if (!this.entityExists(entityId)) return;
@@ -1067,6 +1068,68 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       lowCarbonEnergy = (lowCarbonPercentage * grid.state.fromGrid) / 100;
     }
 
+    const baseSecondarySpan = ({
+      className,
+      template,
+      value,
+      entityId,
+      icon,
+    }: {
+      className: string;
+      template?: string;
+      value?: string;
+      entityId?: string;
+      icon?: string;
+    }) => {
+      if (value || template) {
+        return html`<span
+          class="secondary-info ${className}"
+          @click=${(e: { stopPropagation: () => void }) => {
+            this.openDetails(e, entityId);
+          }}
+          @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
+            if (e.key === 'Enter') {
+              this.openDetails(e, entityId);
+            }
+          }}
+        >
+          ${entities.solar?.secondary_info?.icon ? html`<ha-icon class="secondary-info small" .icon=${icon}></ha-icon>` : ''}
+          ${template ?? value}</span
+        >`;
+      }
+      return '';
+    };
+
+    const generalSecondarySpan = (field, key: string) => {
+      return html` ${field.secondary.has || field.secondary.template
+        ? html` ${baseSecondarySpan({
+            className: key,
+            entityId: field.secondary.entity,
+            icon: field.secondary.icon,
+            value: this.displayValue(field.secondary.state, field.secondary.unit, field.secondary.unit_white_space),
+          })}`
+        : ''}`;
+    };
+
+    const individualSecondarySpan = (individual: Individual, key: string) => {
+      const value = individual.secondary.has
+        ? this.displayValue(individual.secondary.state, individual.secondary.unit, individual.secondary.unit_white_space)
+        : undefined;
+      const passesDisplayZeroCheck =
+        individual.secondary.displayZero !== false ||
+        (isNumberValue(individual.secondary.state)
+          ? (Number(individual.secondary.state) ?? 0) > (individual.secondary.displayZeroTolerance ?? 0)
+          : true);
+      return html` ${individual.secondary.has && passesDisplayZeroCheck
+        ? html`${baseSecondarySpan({
+            className: key,
+            entityId: individual.secondary.entity,
+            icon: individual.secondary.icon,
+            value,
+          })}`
+        : ''}`;
+    };
+
     return html`
       <ha-card .header=${this._config.title}>
         <div class="card-content" id="card-content">
@@ -1079,45 +1142,15 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                       <div
                         class="circle"
                         @click=${(e: { stopPropagation: () => void }) => {
-                          e.stopPropagation();
-                          this.openDetails(entities.fossil_fuel_percentage?.entity);
+                          this.openDetails(e, entities.fossil_fuel_percentage?.entity);
                         }}
                         @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                           if (e.key === 'Enter') {
-                            e.stopPropagation();
-                            this.openDetails(entities.fossil_fuel_percentage?.entity);
+                            this.openDetails(e, entities.fossil_fuel_percentage?.entity);
                           }
                         }}
                       >
-                        ${nonFossil.secondary.has
-                          ? html`
-                              <span
-                                class="secondary-info low-carbon"
-                                @click=${(e: { stopPropagation: () => void }) => {
-                                  e.stopPropagation();
-                                  this.openDetails(entities.fossil_fuel_percentage?.secondary_info?.entity);
-                                }}
-                                @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
-                                  if (e.key === 'Enter') {
-                                    e.stopPropagation();
-                                    this.openDetails(entities.fossil_fuel_percentage?.secondary_info?.entity);
-                                  }
-                                }}
-                              >
-                                ${entities.fossil_fuel_percentage?.secondary_info?.icon
-                                  ? html`<ha-icon
-                                      class="secondary-info small"
-                                      .icon=${entities.fossil_fuel_percentage?.secondary_info?.icon}
-                                    ></ha-icon>`
-                                  : ''}
-                                ${this.displayValue(
-                                  nonFossil.secondary.state,
-                                  entities.fossil_fuel_percentage?.secondary_info?.unit_of_measurement,
-                                  entities.fossil_fuel_percentage?.secondary_info?.unit_white_space,
-                                )}
-                              </span>
-                            `
-                          : ''}
+                        ${generalSecondarySpan(nonFossil, 'nonFossilFuel')}
                         <ha-icon
                           .icon=${nonFossilIcon}
                           class="low-carbon"
@@ -1169,43 +1202,15 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                       <div
                         class="circle"
                         @click=${(e: { stopPropagation: () => void }) => {
-                          e.stopPropagation();
-                          this.openDetails(solar.mainEntity);
+                          this.openDetails(e, solar.mainEntity);
                         }}
                         @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                           if (e.key === 'Enter') {
-                            e.stopPropagation();
-                            this.openDetails(solar.mainEntity);
+                            this.openDetails(e, solar.mainEntity);
                           }
                         }}
                       >
-                        ${solar.secondary.has
-                          ? html`
-                              <span
-                                class="secondary-info solar"
-                                @click=${(e: { stopPropagation: () => void }) => {
-                                  e.stopPropagation();
-                                  this.openDetails(entities.solar?.secondary_info?.entity);
-                                }}
-                                @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
-                                  if (e.key === 'Enter') {
-                                    e.stopPropagation();
-                                    this.openDetails(entities.solar?.secondary_info?.entity);
-                                  }
-                                }}
-                              >
-                                ${entities.solar?.secondary_info?.icon
-                                  ? html`<ha-icon class="secondary-info small" .icon=${entities.solar?.secondary_info?.icon}></ha-icon>`
-                                  : ''}
-                                ${this.displayValue(
-                                  solar.secondary.state,
-                                  entities.solar?.secondary_info?.unit_of_measurement,
-                                  entities.solar?.secondary_info?.unit_white_space,
-                                )}
-                              </span>
-                            `
-                          : ''}
-
+                        ${generalSecondarySpan(solar, 'solar')}
                         <ha-icon
                           id="solar-icon"
                           .icon=${solarIcon}
@@ -1228,42 +1233,15 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                       <div
                         class="circle"
                         @click=${(e: { stopPropagation: () => void }) => {
-                          e.stopPropagation();
-                          this.openDetails(individual2.mainEntity);
+                          this.openDetails(e, individual2.mainEntity);
                         }}
                         @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                           if (e.key === 'Enter') {
-                            e.stopPropagation();
-                            this.openDetails(individual2.mainEntity);
+                            this.openDetails(e, individual2.mainEntity);
                           }
                         }}
                       >
-                        ${individual2.secondary.has
-                          ? html`
-                              <span
-                                class="secondary-info individual2"
-                                @click=${(e: { stopPropagation: () => void }) => {
-                                  e.stopPropagation();
-                                  this.openDetails(entities.individual2?.secondary_info?.entity);
-                                }}
-                                @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
-                                  if (e.key === 'Enter') {
-                                    e.stopPropagation();
-                                    this.openDetails(entities.individual2?.secondary_info?.entity);
-                                  }
-                                }}
-                              >
-                                ${entities.individual2?.secondary_info?.icon
-                                  ? html`<ha-icon class="secondary-info small" .icon=${entities.individual2?.secondary_info?.icon}></ha-icon>`
-                                  : ''}
-                                ${this.displayValue(
-                                  individual2.secondary.state,
-                                  entities.individual2?.secondary_info?.unit_of_measurement,
-                                  entities.individual2?.secondary_info?.unit_white_space,
-                                )}
-                              </span>
-                            `
-                          : ''}
+                        ${individualSecondarySpan(individual2, 'individual2')}
                         <ha-icon
                           id="individual2-icon"
                           .icon=${individual2.icon}
@@ -1308,41 +1286,15 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                         class="circle"
                         @click=${(e: { stopPropagation: () => void }) => {
                           e.stopPropagation();
-                          this.openDetails(individual1.mainEntity);
+                          this.openDetails(e, individual1.mainEntity);
                         }}
                         @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                           if (e.key === 'Enter') {
-                            e.stopPropagation();
-                            this.openDetails(individual1.mainEntity);
+                            this.openDetails(e, individual1.mainEntity);
                           }
                         }}
                       >
-                        ${individual1.secondary.has
-                          ? html`
-                              <span
-                                class="secondary-info individual1"
-                                @click=${(e: { stopPropagation: () => void }) => {
-                                  e.stopPropagation();
-                                  this.openDetails(entities.individual1?.secondary_info?.entity);
-                                }}
-                                @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
-                                  if (e.key === 'Enter') {
-                                    e.stopPropagation();
-                                    this.openDetails(entities.individual1?.secondary_info?.entity);
-                                  }
-                                }}
-                              >
-                                ${entities.individual1?.secondary_info?.icon
-                                  ? html`<ha-icon class="secondary-info small" .icon=${entities.individual1?.secondary_info?.icon}></ha-icon>`
-                                  : ''}
-                                ${this.displayValue(
-                                  individual1.secondary.state,
-                                  entities.individual1?.secondary_info?.unit_of_measurement,
-                                  entities.individual1?.secondary_info?.unit_white_space,
-                                )}
-                              </span>
-                            `
-                          : ''}
+                        ${individualSecondarySpan(individual1, 'individual1')}
                         <ha-icon
                           id="individual1-icon"
                           .icon=${individual1.icon}
@@ -1395,7 +1347,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                           ? entities.grid!.entity
                           : entities.grid!.entity!.consumption! || entities.grid!.entity!.production!;
                       e.stopPropagation();
-                      this.openDetails(target);
+                      this.openDetails(e, target);
                     }}
                     @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                       if (e.key === 'Enter') {
@@ -1404,36 +1356,11 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                             ? entities.grid!.entity
                             : entities.grid!.entity!.consumption! || entities.grid!.entity!.production!;
                         e.stopPropagation();
-                        this.openDetails(target);
+                        this.openDetails(e, target);
                       }
                     }}
                   >
-                    ${grid.secondary.has
-                      ? html`
-                          <span
-                            class="secondary-info grid"
-                            @click=${(e: { stopPropagation: () => void }) => {
-                              e.stopPropagation();
-                              this.openDetails(entities.grid?.secondary_info?.entity);
-                            }}
-                            @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
-                              if (e.key === 'Enter') {
-                                e.stopPropagation();
-                                this.openDetails(entities.grid?.secondary_info?.entity);
-                              }
-                            }}
-                          >
-                            ${entities.grid?.secondary_info?.icon
-                              ? html`<ha-icon class="secondary-info small" .icon=${entities.grid?.secondary_info?.icon}></ha-icon>`
-                              : ''}
-                            ${this.displayValue(
-                              grid.secondary.state,
-                              entities.grid?.secondary_info?.unit_of_measurement,
-                              entities.grid?.secondary_info?.unit_white_space,
-                            )}
-                          </span>
-                        `
-                      : ''}
+                    ${generalSecondarySpan(grid, 'grid')}
                     <ha-icon .icon=${grid.icon}></ha-icon>
                     ${(entities.grid?.display_state === 'two_way' ||
                       entities.grid?.display_state === undefined ||
@@ -1448,13 +1375,13 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                           @click=${(e: { stopPropagation: () => void }) => {
                             const target = typeof entities.grid!.entity === 'string' ? entities.grid!.entity : entities.grid!.entity.production!;
                             e.stopPropagation();
-                            this.openDetails(target);
+                            this.openDetails(e, target);
                           }}
                           @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                             if (e.key === 'Enter') {
                               const target = typeof entities.grid!.entity === 'string' ? entities.grid!.entity : entities.grid!.entity.production!;
                               e.stopPropagation();
-                              this.openDetails(target);
+                              this.openDetails(e, target);
                             }
                           }}
                         >
@@ -1484,42 +1411,15 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                 class="circle"
                 id="home-circle"
                 @click=${(e: { stopPropagation: () => void }) => {
-                  e.stopPropagation();
-                  this.openDetails(home.mainEntity);
+                  this.openDetails(e, home.mainEntity);
                 }}
                 @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                   if (e.key === 'Enter') {
-                    e.stopPropagation();
-                    this.openDetails(home.mainEntity);
+                    this.openDetails(e, home.mainEntity);
                   }
                 }}
               >
-                ${home.secondary.has
-                  ? html`
-                      <span
-                        class="secondary-info home"
-                        @click=${(e: { stopPropagation: () => void }) => {
-                          e.stopPropagation();
-                          this.openDetails(entities.home?.secondary_info?.entity);
-                        }}
-                        @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
-                          if (e.key === 'Enter') {
-                            e.stopPropagation();
-                            this.openDetails(entities.home?.secondary_info?.entity);
-                          }
-                        }}
-                      >
-                        ${entities.home?.secondary_info?.icon
-                          ? html`<ha-icon class="secondary-info small" .icon=${entities.home?.secondary_info?.icon}></ha-icon>`
-                          : ''}
-                        ${this.displayValue(
-                          solar.secondary.state,
-                          entities.home?.secondary_info?.unit_of_measurement,
-                          entities.home?.secondary_info?.unit_white_space,
-                        )}
-                      </span>
-                    `
-                  : ''}
+                ${generalSecondarySpan(home, 'home')}
                 <ha-icon .icon=${homeIcon}></ha-icon>
                 ${homeUsageToDisplay}
                 <svg>
@@ -1589,7 +1489,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                             ? entities.battery?.entity
                             : entities.battery?.entity!.production;
                           e.stopPropagation();
-                          this.openDetails(target);
+                          this.openDetails(e, target);
                         }}
                         @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                           if (e.key === 'Enter') {
@@ -1599,7 +1499,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                               ? entities.battery!.entity!
                               : entities.battery!.entity!.production;
                             e.stopPropagation();
-                            this.openDetails(target);
+                            this.openDetails(e, target);
                           }
                         }}
                       >
@@ -1607,12 +1507,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                           ? html` <span
                               @click=${(e: { stopPropagation: () => void }) => {
                                 e.stopPropagation();
-                                this.openDetails(entities.battery?.state_of_charge);
+                                this.openDetails(e, entities.battery?.state_of_charge);
                               }}
                               @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                                 if (e.key === 'Enter') {
                                   e.stopPropagation();
-                                  this.openDetails(entities.battery?.state_of_charge);
+                                  this.openDetails(e, entities.battery?.state_of_charge);
                                 }
                               }}
                               id="battery-state-of-charge-text"
@@ -1634,12 +1534,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                             : 'padding-top: 2px; padding-bottom: 2px;'}
                           @click=${(e: { stopPropagation: () => void }) => {
                             e.stopPropagation();
-                            this.openDetails(entities.battery?.state_of_charge);
+                            this.openDetails(e, entities.battery?.state_of_charge);
                           }}
                           @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                             if (e.key === 'Enter') {
                               e.stopPropagation();
-                              this.openDetails(entities.battery?.state_of_charge);
+                              this.openDetails(e, entities.battery?.state_of_charge);
                             }
                           }}
                         ></ha-icon>
@@ -1653,14 +1553,14 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                                 const target =
                                   typeof entities.battery!.entity === 'string' ? entities.battery!.entity! : entities.battery!.entity!.production!;
                                 e.stopPropagation();
-                                this.openDetails(target);
+                                this.openDetails(e, target);
                               }}
                               @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                                 if (e.key === 'Enter') {
                                   const target =
                                     typeof entities.battery!.entity === 'string' ? entities.battery!.entity! : entities.battery!.entity!.production!;
                                   e.stopPropagation();
-                                  this.openDetails(target);
+                                  this.openDetails(e, target);
                                 }
                               }}
                             >
@@ -1678,14 +1578,14 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                                 const target =
                                   typeof entities.battery!.entity === 'string' ? entities.battery!.entity! : entities.battery!.entity!.consumption!;
                                 e.stopPropagation();
-                                this.openDetails(target);
+                                this.openDetails(e, target);
                               }}
                               @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                                 if (e.key === 'Enter') {
                                   const target =
                                     typeof entities.battery!.entity === 'string' ? entities.battery!.entity! : entities.battery!.entity!.consumption!;
                                   e.stopPropagation();
-                                  this.openDetails(target);
+                                  this.openDetails(e, target);
                                 }
                               }}
                             >
@@ -1726,42 +1626,15 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                       <div
                         class="circle"
                         @click=${(e: { stopPropagation: () => void }) => {
-                          e.stopPropagation();
-                          this.openDetails(individual1.mainEntity);
+                          this.openDetails(e, individual1.mainEntity);
                         }}
                         @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                           if (e.key === 'Enter') {
-                            e.stopPropagation();
-                            this.openDetails(individual1.mainEntity);
+                            this.openDetails(e, individual1.mainEntity);
                           }
                         }}
                       >
-                        ${individual1.secondary.has
-                          ? html`
-                              <span
-                                class="secondary-info individual1"
-                                @click=${(e: { stopPropagation: () => void }) => {
-                                  e.stopPropagation();
-                                  this.openDetails(entities.individual1?.secondary_info?.entity);
-                                }}
-                                @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
-                                  if (e.key === 'Enter') {
-                                    e.stopPropagation();
-                                    this.openDetails(entities.individual1?.secondary_info?.entity);
-                                  }
-                                }}
-                              >
-                                ${entities.individual1?.secondary_info?.icon
-                                  ? html`<ha-icon class="secondary-info small" .icon=${entities.individual1?.secondary_info?.icon}></ha-icon>`
-                                  : ''}
-                                ${this.displayValue(
-                                  individual1.secondary.state,
-                                  entities.individual1?.secondary_info?.unit_of_measurement,
-                                  entities.individual1?.secondary_info?.unit_white_space,
-                                )}
-                              </span>
-                            `
-                          : ''}
+                        ${individualSecondarySpan(individual1, 'individual1')}
                         <ha-icon
                           id="individual1-icon"
                           .icon=${individual1.icon}
