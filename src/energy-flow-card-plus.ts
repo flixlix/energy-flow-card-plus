@@ -43,6 +43,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
   @state() private entitiesArr: string[] = [];
   @state() private error?: Error | unknown;
   @state() private _data?: EnergyData;
+  @state() private _width = 0;
 
   public static async getConfigElement(): Promise<LovelaceCardEditor> {
     await import('./ui-editor/ui-editor');
@@ -1068,6 +1069,24 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       lowCarbonEnergy = (lowCarbonPercentage * grid.state.fromGrid) / 100;
     }
 
+    // Adjust Curved Lines
+
+    const isCardWideEnough = this._width > 420;
+    if (solar.has) {
+      if (battery.has) {
+        // has solar, battery and grid
+        this.style.setProperty('--lines-svg-not-flat-line-height', isCardWideEnough ? '106%' : '102%');
+        this.style.setProperty('--lines-svg-not-flat-line-top', isCardWideEnough ? '-3%' : '-1%');
+        this.style.setProperty('--lines-svg-flat-width', isCardWideEnough ? 'calc(100% - 160px)' : 'calc(100% - 160px)');
+      } else {
+        // has solar but no battery
+        this.style.setProperty('--lines-svg-not-flat-line-height', isCardWideEnough ? '104%' : '102%');
+        this.style.setProperty('--lines-svg-not-flat-line-top', isCardWideEnough ? '-2%' : '-1%');
+        this.style.setProperty('--lines-svg-flat-width', isCardWideEnough ? 'calc(100% - 154px)' : 'calc(100% - 157px)');
+        this.style.setProperty('--lines-svg-not-flat-width', isCardWideEnough ? 'calc(103% - 172px)' : 'calc(103% - 169px)');
+      }
+    }
+
     const baseSecondarySpan = ({
       className,
       template,
@@ -1132,7 +1151,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
 
     return html`
       <ha-card .header=${this._config.title}>
-        <div class="card-content" id="card-content">
+        <div class="card-content" id="energy-flow-card-plus">
           ${solar.has || individual2.has || individual1.has || hasFossilFuelPercentage
             ? html`<div class="row">
                 ${!hasFossilFuelPercentage || (!hasNonFossilFuelUsage && entities.fossil_fuel_percentage?.display_zero === false)
@@ -1887,6 +1906,10 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     if (!this._config || !this.hass) {
       return;
     }
+
+    const elem = this?.shadowRoot?.querySelector('#energy-flow-card-plus');
+    const widthStr = elem ? getComputedStyle(elem).getPropertyValue('width') : '0px';
+    this._width = parseInt(widthStr.replace('px', ''), 10);
   }
 
   static styles = styles;
