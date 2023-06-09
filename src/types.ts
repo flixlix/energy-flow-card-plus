@@ -1,17 +1,9 @@
-import {
-  ActionConfig,
-  BaseActionConfig,
-  HapticType,
-  LovelaceCard,
-  LovelaceCardConfig,
-  LovelaceCardEditor,
-} from 'custom-card-helpers';
+import { ActionConfig, BaseActionConfig, HapticType, LovelaceCard, LovelaceCardConfig, LovelaceCardEditor } from 'custom-card-helpers';
 import { HassEntity, HassServiceTarget } from 'home-assistant-js-websocket';
 import { UNIT_PREFIXES } from './const';
 
 declare global {
   interface HTMLElementTagNameMap {
-
     'hui-error-card': LovelaceCard;
   }
 }
@@ -172,16 +164,6 @@ export interface NormalizedState {
   unit_of_measurement?: string;
 }
 
-
-
-
-
-
-
-
-
-
-
 export type ComboEntity = {
   consumption: string;
   production: string;
@@ -194,8 +176,10 @@ export type SecondaryInfoType = {
   display_zero?: boolean;
   unit_white_space?: boolean;
   display_zero_tolerance?: number;
-  color_value?: boolean | "production" | "consumption";
+  color_value?: boolean | 'production' | 'consumption';
   template?: string;
+  decimals?: number;
+  energy_date_selection?: boolean;
 };
 
 export interface baseConfigEntity {
@@ -204,11 +188,12 @@ export interface baseConfigEntity {
   icon?: string;
   color?: ComboEntity | string;
   color_icon?: boolean | string;
-  display_state?: "two_way" | "one_way" | "one_way_no_zero";
+  display_state?: 'two_way' | 'one_way' | 'one_way_no_zero';
   display_zero_tolerance?: number;
   unit_of_measurement?: string;
   use_metadata?: boolean;
   secondary_info?: SecondaryInfoType;
+  invert_state?: boolean;
 }
 
 export type gridPowerOutage = {
@@ -235,17 +220,19 @@ export type IndividualDeviceType = {
   calculate_flow_rate?: boolean;
   use_metadata?: boolean;
   decimals?: number;
+  unit_white_space?: boolean;
+  show_direction?: boolean;
 };
 
 export type EntityType =
-  | "battery"
-  | "grid"
-  | "solar"
-  | "individual1"
-  | "individual1Secondary"
-  | "individual2"
-  | "individual2Secondary"
-  | "solarSecondary"
-  | "homeSecondary"
-  | "gridSecondary"
-  | "nonFossilSecondary";
+  | 'battery'
+  | 'grid'
+  | 'solar'
+  | 'individual1'
+  | 'individual1Secondary'
+  | 'individual2'
+  | 'individual2Secondary'
+  | 'solarSecondary'
+  | 'homeSecondary'
+  | 'gridSecondary'
+  | 'nonFossilSecondary';
