@@ -2,7 +2,7 @@
 import { LitElement, html, TemplateResult, svg, PropertyValues } from 'lit';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { customElement, property, query, state } from 'lit/decorators';
-import type { Config, EntityType } from './types';
+import type { Config, EntityType, baseEntity } from './types';
 import localize from './localize/localize';
 import { coerceNumber, coerceStringArray, isNumberValue, renderError } from './utils';
 import { SubscribeMixin } from './energy/subscribe-mixin';
@@ -123,13 +123,32 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     this.entitiesArr = [];
     /* loop through entities object in config */
     Object.keys(this._config?.entities).forEach(entity => {
-      if (typeof this._config.entities[entity].entity === 'string') {
-        this.entitiesArr.push(this._config.entities[entity].entity);
+      if (typeof this._config.entities[entity].entity === 'string' || Array.isArray(this._config.entities[entity].entity)) {
+        if (Array.isArray(this._config.entities[entity].entity)) {
+          this._config.entities[entity].entity.forEach((entityId: string) => {
+            this.entitiesArr.push(entityId);
+          });
+        } else {
+          this.entitiesArr.push(this._config.entities[entity].entity);
+        }
       } else if (typeof this._config.entities[entity].entity === 'object') {
-        this.entitiesArr.push(this._config.entities[entity].entity?.consumption);
-        this.entitiesArr.push(this._config.entities[entity].entity?.production);
+        if (Array.isArray(this._config.entities[entity].entity?.consumption)) {
+          this._config.entities[entity].entity?.consumption.forEach((entityId: string) => {
+            this.entitiesArr.push(entityId);
+          });
+        } else {
+          this.entitiesArr.push(this._config.entities[entity].entity?.consumption);
+        }
+        if (Array.isArray(this._config.entities[entity].entity?.production)) {
+          this._config.entities[entity].entity?.production.forEach((entityId: string) => {
+            this.entitiesArr.push(entityId);
+          });
+        } else {
+          this.entitiesArr.push(this._config.entities[entity].entity?.production);
+        }
       }
     });
+    this.entitiesArr = this.entitiesArr.filter(entity => entity !== undefined);
   }
 
   public getCardSize(): Promise<number> | number {
@@ -196,23 +215,31 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return coerceNumber(stateObj.state);
   };
 
-  private getEntityStateWatthours = (entity: string | undefined, instantaneousValue?: boolean): number => {
-    if (!entity || !this.entityAvailable(entity)) {
-      this.unavailableOrMisconfiguredError(entity);
-      return 0;
+  private getEntityStateWatthours = (entity: baseEntity | undefined, instantaneousValue?: boolean): number => {
+    let entityArr: string[] = [];
+    if (typeof entity === 'string') {
+      entityArr.push(entity);
+    } else if (Array.isArray(entity)) {
+      entityArr = entity;
     }
-    let stateObj: HassEntity | undefined;
-    if (instantaneousValue === undefined) {
-      stateObj = this._config.energy_date_selection !== false ? this.states[entity] : this.hass?.states[entity];
-    } else if (instantaneousValue) {
-      stateObj = this.hass?.states[entity];
-    } else {
-      stateObj = this.states[entity];
-    }
-
-    const value = coerceNumber(stateObj?.state);
-    if (stateObj?.attributes.unit_of_measurement?.toUpperCase().startsWith('KWH')) return value * 1000; // case insensitive check `KWH`
-    return value;
+    const valuesArr: number[] = entityArr.map(entity => {
+      if (!entity || !this.entityAvailable(entity)) {
+        this.unavailableOrMisconfiguredError(entity);
+      }
+      let stateObj: HassEntity | undefined;
+      if (instantaneousValue === undefined) {
+        stateObj = this._config.energy_date_selection !== false ? this.states[entity] : this.hass?.states[entity];
+      } else if (instantaneousValue) {
+        stateObj = this.hass?.states[entity];
+      } else {
+        stateObj = this.states[entity];
+      }
+      const value = coerceNumber(stateObj?.state);
+      if (stateObj?.attributes.unit_of_measurement?.toUpperCase().startsWith('KWH')) return value * 1000; // case insensitive check `KWH`
+      return value;
+    });
+    const sum = valuesArr.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+    return sum;
   };
 
   /**
@@ -253,7 +280,9 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
   private hasField(field?: any, acceptStringState?: boolean): boolean {
     return (
       (field !== undefined && field?.display_zero === true) ||
-      (this.getEntityStateWatthours(field?.entity) > (field?.display_zero_tolerance ?? 0) && this.entityAvailable(field?.entity)) ||
+      (this.getEntityStateWatthours(field?.entity) > (field?.display_zero_tolerance ?? 0) && Array.isArray(field?.entity)
+        ? this.entityAvailable(field?.mainEntity)
+        : this.entityAvailable(field?.entity)) ||
       acceptStringState
         ? typeof this.hass.states[field?.entity]?.state === 'string'
         : false
@@ -411,6 +440,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
 
     const solar = {
       entity: entities.solar?.entity as string | undefined,
+      mainEntity: Array.isArray(entities.solar?.entity) ? entities.solar?.entity[0] : entities.solar?.entity,
       has: entities.solar?.entity !== undefined,
       state: {
         total: initialNumericState,
@@ -461,6 +491,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
 
     const home = {
       entity: entities.home?.entity,
+      mainEntity: Array.isArray(entities.home?.entity) ? entities.home?.entity[0] : entities.home?.entity,
       has: entities?.home?.entity !== undefined,
       state: initialNumericState,
       icon: this.computeFieldIcon(entities?.home, 'mdi:home'),
@@ -483,6 +514,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
 
     const getIndividualObject = (field: 'individual1' | 'individual2') => ({
       entity: entities[field]?.entity,
+      mainEntity: Array.isArray(entities[field]?.entity) ? entities[field]?.entity[0] : (entities[field]?.entity as string | undefined),
       has: this.hasField(entities[field]),
       displayZero: entities[field]?.display_zero,
       displayZeroTolerance: entities[field]?.display_zero_tolerance,
@@ -517,6 +549,9 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
 
     const nonFossil = {
       entity: entities.fossil_fuel_percentage?.entity,
+      mainEntity: Array.isArray(entities.fossil_fuel_percentage?.entity)
+        ? entities.fossil_fuel_percentage?.entity[0]
+        : entities.fossil_fuel_percentage?.entity,
       name:
         entities.fossil_fuel_percentage?.name ||
         (entities.fossil_fuel_percentage?.use_metadata && this.getEntityStateObj(entities.fossil_fuel_percentage.entity)?.attributes.friendly_name) ||
@@ -920,19 +955,18 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     }
 
     const solarIcon =
-      entities.solar?.icon || (entities.solar?.use_metadata && this.getEntityStateObj(entities.solar.entity)?.attributes?.icon) || 'mdi:solar-power';
+      entities.solar?.icon || (entities.solar?.use_metadata && this.getEntityStateObj(solar.mainEntity)?.attributes?.icon) || 'mdi:solar-power';
 
     const solarName: string =
       entities.solar?.name ||
-      (entities.solar?.use_metadata && this.getEntityStateObj(entities.solar.entity)?.attributes.friendly_name) ||
+      (entities.solar?.use_metadata && this.getEntityStateObj(solar.mainEntity)?.attributes.friendly_name) ||
       this.hass.localize('ui.panel.lovelace.cards.energy.energy_distribution.solar');
 
-    const homeIcon =
-      entities.home?.icon || (entities.home?.use_metadata && this.getEntityStateObj(entities.home.entity)?.attributes?.icon) || 'mdi:home';
+    const homeIcon = entities.home?.icon || (entities.home?.use_metadata && this.getEntityStateObj(home.mainEntity)?.attributes?.icon) || 'mdi:home';
 
     const homeName =
       entities.home?.name ||
-      (entities.home?.use_metadata && this.getEntityStateObj(entities.home.entity)?.attributes.friendly_name) ||
+      (entities.home?.use_metadata && this.getEntityStateObj(home.mainEntity)?.attributes.friendly_name) ||
       this.hass.localize('ui.panel.lovelace.cards.energy.energy_distribution.home');
 
     const nonFossilIcon =
@@ -1137,12 +1171,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                         class="circle"
                         @click=${(e: { stopPropagation: () => void }) => {
                           e.stopPropagation();
-                          this.openDetails(entities.solar!.entity);
+                          this.openDetails(solar.mainEntity);
                         }}
                         @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                           if (e.key === 'Enter') {
                             e.stopPropagation();
-                            this.openDetails(entities.solar!.entity);
+                            this.openDetails(solar.mainEntity);
                           }
                         }}
                       >
@@ -1196,12 +1230,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                         class="circle"
                         @click=${(e: { stopPropagation: () => void }) => {
                           e.stopPropagation();
-                          this.openDetails(entities.individual2?.entity);
+                          this.openDetails(individual2.mainEntity);
                         }}
                         @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                           if (e.key === 'Enter') {
                             e.stopPropagation();
-                            this.openDetails(entities.individual2?.entity);
+                            this.openDetails(individual2.mainEntity);
                           }
                         }}
                       >
@@ -1275,12 +1309,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                         class="circle"
                         @click=${(e: { stopPropagation: () => void }) => {
                           e.stopPropagation();
-                          this.openDetails(entities.individual1?.entity);
+                          this.openDetails(individual1.mainEntity);
                         }}
                         @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                           if (e.key === 'Enter') {
                             e.stopPropagation();
-                            this.openDetails(entities.individual1?.entity);
+                            this.openDetails(individual1.mainEntity);
                           }
                         }}
                       >
@@ -1452,12 +1486,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                 id="home-circle"
                 @click=${(e: { stopPropagation: () => void }) => {
                   e.stopPropagation();
-                  this.openDetails(entities.home?.entity);
+                  this.openDetails(home.mainEntity);
                 }}
                 @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                   if (e.key === 'Enter') {
                     e.stopPropagation();
-                    this.openDetails(entities.home?.entity);
+                    this.openDetails(home.mainEntity);
                   }
                 }}
               >
@@ -1694,12 +1728,12 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                         class="circle"
                         @click=${(e: { stopPropagation: () => void }) => {
                           e.stopPropagation();
-                          this.openDetails(entities.individual1?.entity);
+                          this.openDetails(individual1.mainEntity);
                         }}
                         @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                           if (e.key === 'Enter') {
                             e.stopPropagation();
-                            this.openDetails(entities.individual1?.entity);
+                            this.openDetails(individual1.mainEntity);
                           }
                         }}
                       >

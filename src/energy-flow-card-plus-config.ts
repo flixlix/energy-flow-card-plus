@@ -1,5 +1,5 @@
 import { LovelaceCardConfig } from 'custom-card-helpers';
-import { ComboEntity, IndividualDeviceType, SecondaryInfoType, baseConfigEntity, gridPowerOutage } from './types';
+import { ComboEntity, IndividualDeviceType, SecondaryInfoType, baseConfigEntity, baseEntity, gridPowerOutage } from './types';
 
 interface mainConfigOptions {
   dashboard_link?: string;
@@ -21,8 +21,8 @@ interface mainConfigOptions {
 export interface EntitiesConfig {
   battery?: baseConfigEntity & {
     entity?: {
-      consumption?: string;
-      production?: string;
+      consumption?: baseEntity;
+      production?: baseEntity;
     };
     state_of_charge?: string;
     state_of_charge_unit?: string;
@@ -34,8 +34,8 @@ export interface EntitiesConfig {
   };
   grid?: baseConfigEntity & {
     entity?: {
-      consumption?: string;
-      production?: string;
+      consumption?: baseEntity;
+      production?: baseEntity;
     };
     power_outage?: gridPowerOutage;
     secondary_info?: SecondaryInfoType;
@@ -43,7 +43,7 @@ export interface EntitiesConfig {
     color?: ComboEntity;
   };
   solar?: baseConfigEntity & {
-    entity: string;
+    entity: baseEntity;
     color?: string | number[];
     color_icon?: boolean;
     color_value?: boolean;
@@ -52,7 +52,7 @@ export interface EntitiesConfig {
     display_zero_state?: boolean;
   };
   home?: baseConfigEntity & {
-    entity: string;
+    entity: baseEntity;
     override_state?: boolean;
     color_icon?: boolean | 'solar' | 'grid' | 'battery';
     color_value?: boolean | 'solar' | 'grid' | 'battery';
