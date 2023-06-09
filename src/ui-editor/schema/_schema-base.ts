@@ -1,7 +1,9 @@
-export function getEntityCombinedSelectionSchema(field?: string) {
+import localize from '../../localize/localize';
+
+export function getEntityCombinedSelectionSchema() {
   return {
     type: 'expandable',
-    title: `Combined ${field || 'Grid'} Entity (positive & negative values)`,
+    title: localize('editor.combined'),
     schema: [
       {
         name: 'entity',
@@ -11,10 +13,10 @@ export function getEntityCombinedSelectionSchema(field?: string) {
   } as const;
 }
 
-export function getEntitySeparatedSelectionSchema(field?: string) {
+export function getEntitySeparatedSelectionSchema() {
   return {
     type: 'expandable',
-    title: `Separated ${field || 'Grid'} Entities (One for production, one for consumption)`,
+    title: localize('editor.separated'),
     name: 'entity',
     schema: [
       {
@@ -33,7 +35,7 @@ export function getEntitySeparatedSelectionSchema(field?: string) {
 
 export const customColorsSchema = {
   name: 'color',
-  title: 'Custom Colors',
+  title: localize('editor.custom_colors'),
   type: 'expandable',
   schema: [
     {
@@ -75,6 +77,7 @@ export const secondaryInfoSchema = [
       { name: 'unit_white_space', label: 'Unit White Space', selector: { boolean: {} } },
       { name: 'display_zero', label: 'Display Zero', selector: { boolean: {} } },
       { name: 'display_zero_tolerance', label: 'Display Zero Tolerance', selector: { number: { mode: 'box', min: 0, max: 1000000, step: 0.1 } } },
+      { name: 'energy_date_selection', label: 'Energy Date Selection', selector: { boolean: {} } },
     ],
   },
 ] as const;

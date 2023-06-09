@@ -1,4 +1,5 @@
 import { secondaryInfoSchema, getBaseMainConfigSchema } from './_schema-base';
+import localize from '../../localize/localize';
 
 const mainSchema = {
   ...getBaseMainConfigSchema(),
@@ -24,6 +25,11 @@ const mainSchema = {
       label: 'Display Zero Tolerance',
       selector: { number: { mode: 'box', min: 0, max: 1000000, step: 0.1 } },
     },
+    {
+      name: 'use_metadata',
+      label: 'Use Metadata',
+      selector: { boolean: {} },
+    },
   ],
 };
 
@@ -39,7 +45,7 @@ export const solarSchema = [
     selector: { color_rgb: {} },
   },
   {
-    title: 'Secondary Info',
+    title: localize('editor.secondary_info'),
     name: 'secondary_info',
     type: 'expandable',
     schema: secondaryInfoSchema,
