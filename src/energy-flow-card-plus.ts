@@ -124,12 +124,31 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     /* loop through entities object in config */
     Object.keys(this._config?.entities).forEach(entity => {
       if (typeof this._config.entities[entity].entity === 'string') {
-        this.entitiesArr.push(this._config.entities[entity].entity);
+        if (Array.isArray(this._config.entities[entity].entity)) {
+          this._config.entities[entity].entity.forEach((entityId: string) => {
+            this.entitiesArr.push(entityId);
+          });
+        } else {
+          this.entitiesArr.push(this._config.entities[entity].entity);
+        }
       } else if (typeof this._config.entities[entity].entity === 'object') {
-        this.entitiesArr.push(this._config.entities[entity].entity?.consumption);
-        this.entitiesArr.push(this._config.entities[entity].entity?.production);
+        if (Array.isArray(this._config.entities[entity].entity?.consumption)) {
+          this._config.entities[entity].entity?.consumption.forEach((entityId: string) => {
+            this.entitiesArr.push(entityId);
+          });
+        } else {
+          this.entitiesArr.push(this._config.entities[entity].entity?.consumption);
+        }
+        if (Array.isArray(this._config.entities[entity].entity?.production)) {
+          this._config.entities[entity].entity?.production.forEach((entityId: string) => {
+            this.entitiesArr.push(entityId);
+          });
+        } else {
+          this.entitiesArr.push(this._config.entities[entity].entity?.production);
+        }
       }
     });
+    console.log(this.entitiesArr);
   }
 
   public getCardSize(): Promise<number> | number {
@@ -196,23 +215,31 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return coerceNumber(stateObj.state);
   };
 
-  private getEntityStateWatthours = (entity: string | undefined, instantaneousValue?: boolean): number => {
-    if (!entity || !this.entityAvailable(entity)) {
-      this.unavailableOrMisconfiguredError(entity);
-      return 0;
+  private getEntityStateWatthours = (entity: baseEntity | undefined, instantaneousValue?: boolean): number => {
+    let entityArr: string[] = [];
+    if (typeof entity === 'string') {
+      entityArr.push(entity);
+    } else if (Array.isArray(entity)) {
+      entityArr = entity;
     }
-    let stateObj: HassEntity | undefined;
-    if (instantaneousValue === undefined) {
-      stateObj = this._config.energy_date_selection !== false ? this.states[entity] : this.hass?.states[entity];
-    } else if (instantaneousValue) {
-      stateObj = this.hass?.states[entity];
-    } else {
-      stateObj = this.states[entity];
-    }
-
-    const value = coerceNumber(stateObj?.state);
-    if (stateObj?.attributes.unit_of_measurement?.toUpperCase().startsWith('KWH')) return value * 1000; // case insensitive check `KWH`
-    return value;
+    const valuesArr: number[] = entityArr.map(entity => {
+      if (!entity || !this.entityAvailable(entity)) {
+        this.unavailableOrMisconfiguredError(entity);
+      }
+      let stateObj: HassEntity | undefined;
+      if (instantaneousValue === undefined) {
+        stateObj = this._config.energy_date_selection !== false ? this.states[entity] : this.hass?.states[entity];
+      } else if (instantaneousValue) {
+        stateObj = this.hass?.states[entity];
+      } else {
+        stateObj = this.states[entity];
+      }
+      const value = coerceNumber(stateObj?.state);
+      if (stateObj?.attributes.unit_of_measurement?.toUpperCase().startsWith('KWH')) return value * 1000; // case insensitive check `KWH`
+      return value;
+    });
+    const sum = valuesArr.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
+    return sum;
   };
 
   /**
