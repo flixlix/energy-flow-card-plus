@@ -3,7 +3,7 @@ import { LitElement, html, TemplateResult, svg, PropertyValues } from 'lit';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { customElement, property, query, state } from 'lit/decorators';
 import type { Config, EntityType } from './types';
-import { localize } from './localize/localize';
+import localize from './localize/localize';
 import { coerceNumber, coerceStringArray, isNumberValue, renderError } from './utils';
 import { SubscribeMixin } from './energy/subscribe-mixin';
 import { HassEntities, HassEntity } from 'home-assistant-js-websocket';
