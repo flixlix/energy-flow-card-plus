@@ -385,4 +385,8 @@ export const styles = css`
   .card-actions a {
     text-decoration: none;
   }
+
+  .home-circle-sections {
+    pointer-events: none;
+  }
 `;
