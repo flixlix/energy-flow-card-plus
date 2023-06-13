@@ -432,6 +432,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         icon: entities.grid?.secondary_info?.icon,
         unit: entities.grid?.secondary_info?.unit_of_measurement,
         unit_white_space: entities.grid?.secondary_info?.unit_white_space,
+        decimals: entities.grid?.secondary_info?.decimals,
         energyDateSelection: entities.grid?.secondary_info?.energy_date_selection || false,
         color: {
           type: entities.grid?.secondary_info?.color_value,
@@ -458,6 +459,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         state: initialSecondaryState,
         icon: entities.solar?.secondary_info?.icon,
         unit: entities.solar?.secondary_info?.unit_of_measurement,
+        decimals: entities.solar?.secondary_info?.decimals,
         unit_white_space: entities.solar?.secondary_info?.unit_white_space,
         energyDateSelection: entities.solar?.secondary_info?.energy_date_selection || false,
       },
@@ -537,6 +539,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         unit: entities[field]?.secondary_info?.unit_of_measurement,
         unit_white_space: entities[field]?.secondary_info?.unit_white_space,
         displayZero: entities[field]?.secondary_info?.display_zero,
+        decimals: entities[field]?.secondary_info?.decimals,
         displayZeroTolerance: entities[field]?.secondary_info?.display_zero_tolerance,
         energyDateSelection: entities[field]?.secondary_info?.energy_date_selection || false,
       },
@@ -1125,7 +1128,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
             className: key,
             entityId: field.secondary.entity,
             icon: field.secondary.icon,
-            value: this.displayValue(field.secondary.state, field.secondary.unit, field.secondary.unit_white_space),
+            value: this.displayValue(field.secondary.state, field.secondary.unit, field.secondary.unit_white_space, field?.secondary?.decimals),
           })}`
         : ''}`;
     };
