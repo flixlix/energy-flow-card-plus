@@ -416,8 +416,15 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       name: this.computeFieldName(entities.grid, this.hass.localize('ui.panel.lovelace.cards.energy.energy_distribution.grid')) as
         | string
         | TemplateResult<1>,
-      mainEntity:
-        typeof entities.grid?.entity === 'object' ? entities.grid.entity.consumption || entities.grid.entity.production : entities.grid?.entity,
+      mainEntity: Array.isArray(entities?.grid?.entity?.consumption)
+        ? entities?.grid?.entity?.consumption[0]
+        : typeof entities?.grid?.entity?.consumption === 'string'
+        ? entities?.grid?.entity?.consumption
+        : Array.isArray(entities?.grid?.entity?.production)
+        ? entities?.grid?.entity?.production[0]
+        : typeof entities?.grid?.entity?.production === 'string'
+        ? entities?.grid?.entity?.production
+        : undefined,
       color: {
         fromGrid: entities.grid?.color?.consumption,
         toGrid: entities.grid?.color?.production,
@@ -1361,21 +1368,11 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                   <div
                     class="circle"
                     @click=${(e: { stopPropagation: () => void }) => {
-                      const target: string =
-                        typeof entities.grid!.entity === 'string'
-                          ? entities.grid!.entity
-                          : entities.grid!.entity!.consumption! || entities.grid!.entity!.production!;
-                      e.stopPropagation();
-                      this.openDetails(e, target);
+                      this.openDetails(e, grid.mainEntity);
                     }}
                     @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                       if (e.key === 'Enter') {
-                        const target: string =
-                          typeof entities.grid!.entity === 'string'
-                            ? entities.grid!.entity
-                            : entities.grid!.entity!.consumption! || entities.grid!.entity!.production!;
-                        e.stopPropagation();
-                        this.openDetails(e, target);
+                        this.openDetails(e, grid.mainEntity);
                       }
                     }}
                   >
@@ -1392,14 +1389,16 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
                       ? html`<span
                           class="return"
                           @click=${(e: { stopPropagation: () => void }) => {
-                            const target = typeof entities.grid!.entity === 'string' ? entities.grid!.entity : entities.grid!.entity.production!;
-                            e.stopPropagation();
+                            const target = Array.isArray(entities.grid!.entity.production)
+                              ? entities?.grid?.entity?.production[0]
+                              : entities?.grid?.entity.production;
                             this.openDetails(e, target);
                           }}
                           @keyDown=${(e: { key: string; stopPropagation: () => void }) => {
                             if (e.key === 'Enter') {
-                              const target = typeof entities.grid!.entity === 'string' ? entities.grid!.entity : entities.grid!.entity.production!;
-                              e.stopPropagation();
+                              const target = Array.isArray(entities.grid!.entity.production)
+                                ? entities?.grid?.entity?.production[0]
+                                : entities?.grid?.entity.production;
                               this.openDetails(e, target);
                             }
                           }}
