@@ -51,16 +51,13 @@ If you would like to customize the Energy period selector and its dates, check o
 
 ### HACS (recommended)
 
-This card is not direclty available in [HACS](https://hacs.xyz/) (Home Assistant Community Store), but can be added using "Custom Repositories".
+This card is direclty available in [HACS](https://hacs.xyz/) (Home Assistant Community Store).
 _HACS is a third party community store and is not included in Home Assistant out of the box._
 To install this:
 
 - Go to HACS
 - Click on `Frontend`
-- Click on the overflow Menu (three vertical dots)
-- Click on `Custom Repositories`
-- Type this URL [https://github.com/flixlix/energy-flow-card-plus](https://github.com/flixlix/energy-flow-card-plus)
-- In "Category", select `lovelace`
+- Search for `Energy Flow Card Plus`
 - Install via UI
 
 <details>  <summary>Manual Install</summary>
