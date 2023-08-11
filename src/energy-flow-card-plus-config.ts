@@ -4,11 +4,13 @@ import { ComboEntity, IndividualDeviceType, SecondaryInfoType, baseConfigEntity,
 interface mainConfigOptions {
   dashboard_link?: string;
   dashboard_link_label?: string;
-  kwh_decimals?: number;
   min_flow_rate?: number;
   max_flow_rate?: number;
   wh_decimals?: number;
+  kwh_decimals?: number;
+  mwh_decimals?: number;
   wh_kwh_threshold?: number;
+  kwh_mwh_threshold?: number;
   clickable_entities?: boolean;
   max_expected_energy?: number;
   min_expected_energy?: number;

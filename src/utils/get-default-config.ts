@@ -6,9 +6,11 @@ export const defaultValues = {
   minFlowRate: 1,
   watthourDecimals: 1,
   kilowatthourDecimals: 0,
+  megawatthourDecimals: 0,
   minExpectedEnergy: 10,
   maxExpectedEnergy: 2000,
   whkWhThreshold: 1000,
+  kwhMwhThreshold: 1000,
 };
 
 export function getDefaultConfig(hass: HomeAssistant): EnergyFlowCardPlusConfig {
