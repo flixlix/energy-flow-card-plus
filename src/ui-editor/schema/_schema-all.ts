@@ -21,11 +21,13 @@ export const cardConfigStruct = assign(
     dashboard_link_label: optional(string()),
     wh_decimals: optional(integer()),
     kwh_decimals: optional(integer()),
+    mwh_decimals: optional(integer()),
     min_flow_rate: optional(number()),
     max_flow_rate: optional(number()),
     min_expected_energy: optional(number()),
     max_expected_energy: optional(number()),
     wh_kwh_threshold: optional(number()),
+    kwh_mwh_threshold: optional(number()),
     clickable_entities: optional(boolean()),
     display_zero_lines: optional(boolean()),
     use_new_flow_rate_model: optional(boolean()),
@@ -123,12 +125,17 @@ export const advancedOptionsSchema = memoizeOne(localize => [
           },
           {
             name: 'wh_decimals',
-            label: 'Watt Decimals',
+            label: 'Wh Decimals',
             selector: { number: { mode: 'box', min: 0, max: 5, step: 1 } },
           },
           {
             name: 'kwh_decimals',
-            label: 'kW Decimals',
+            label: 'kWh Decimals',
+            selector: { number: { mode: 'box', min: 0, max: 5, step: 1 } },
+          },
+          {
+            name: 'mwh_decimals',
+            label: 'MWh Decimals',
             selector: { number: { mode: 'box', min: 0, max: 5, step: 1 } },
           },
           {
@@ -153,7 +160,12 @@ export const advancedOptionsSchema = memoizeOne(localize => [
           },
           {
             name: 'wh_kwh_threshold',
-            label: 'Watt to Kilowatt Threshold',
+            label: 'Wh/kWh Threshold',
+            selector: { number: { mode: 'box', min: 0, max: 1000000, step: 1 } },
+          },
+          {
+            name: 'kwh_mwh_threshold',
+            label: 'kWh/MWh Threshold',
             selector: { number: { mode: 'box', min: 0, max: 1000000, step: 1 } },
           },
           {

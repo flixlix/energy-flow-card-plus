@@ -106,11 +106,13 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     }
     this._config = {
       ...config,
-      kwh_decimals: coerceNumber(config.kwh_decimals, defaultValues.kilowatthourDecimals),
       min_flow_rate: coerceNumber(config.min_flow_rate, defaultValues.minFlowRate),
       max_flow_rate: coerceNumber(config.max_flow_rate, defaultValues.maxFlowRate),
       wh_decimals: coerceNumber(config.wh_decimals, defaultValues.watthourDecimals),
+      kwh_decimals: coerceNumber(config.kwh_decimals, defaultValues.kilowatthourDecimals),
+      mwh_decimals: coerceNumber(config.mwh_decimals, defaultValues.megawatthourDecimals),
       wh_kwh_threshold: coerceNumber(config.wh_kwh_threshold, defaultValues.whkWhThreshold),
+      kwh_mwh_threshold: coerceNumber(config.kwh_mwh_threshold, defaultValues.kwhMwhThreshold),
       max_expected_energy: coerceNumber(config.max_expected_energy, defaultValues.maxExpectedEnergy),
       min_expected_energy: coerceNumber(config.min_expected_energy, defaultValues.minExpectedEnergy),
     };
@@ -236,6 +238,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       }
       const value = coerceNumber(stateObj?.state);
       if (stateObj?.attributes.unit_of_measurement?.toUpperCase().startsWith('KWH')) return value * 1000; // case insensitive check `KWH`
+      else if (stateObj?.attributes.unit_of_measurement?.toUpperCase().startsWith('MWH')) return value * 1000000; // case insensitive check `MWH`
       return value;
     });
     const sum = valuesArr.reduce((accumulator, currentValue) => accumulator + currentValue, 0);
@@ -258,12 +261,17 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     if (value === null) return '0';
     if (Number.isNaN(+value)) return value.toString();
     const valueInNumber = Number(value);
+    const isMwh = unit === undefined && valueInNumber * 1000 >= this._config!.kwh_mwh_threshold!;
     const isKWh = unit === undefined && valueInNumber >= this._config!.wh_kwh_threshold!;
     const v = formatNumber(
-      isKWh ? round(valueInNumber / 1000, this._config!.kwh_decimals) : round(valueInNumber, decimals ?? this._config!.wh_decimals),
+      isMwh
+        ? round(valueInNumber / 1000000, this._config!.mwh_decimals)
+        : isKWh
+        ? round(valueInNumber / 1000, this._config!.kwh_decimals)
+        : round(valueInNumber, decimals ?? this._config!.wh_decimals),
       this.hass.locale,
     );
-    return `${v}${unitWhiteSpace === false ? '' : ' '}${unit || (isKWh ? 'kWh' : 'Wh')}`;
+    return `${v}${unitWhiteSpace === false ? '' : ' '}${unit || (isMwh ? 'MWh' : isKWh ? 'kWh' : 'Wh')}`;
   };
 
   private openDetails(event: { stopPropagation: any; key?: string }, entityId?: string | undefined): void {
