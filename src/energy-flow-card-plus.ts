@@ -365,9 +365,9 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       const secondaryState = secondaryEntity && this.getEntityStateWatthours(secondaryEntity, wantsInstantaneousValue);
       if (typeof secondaryState === 'number') {
         if (this.entityInverted(name)) {
-          return Math.abs(Math.min(secondaryState, 0));
+          return -secondaryState; // Invert the sign if entityInverted returns true
         } else {
-          return Math.max(secondaryState, 0);
+          return secondaryState; // Return the value as is if entityInverted returns false
         }
       } else if (typeof secondaryState === 'string') {
         return secondaryState;
