@@ -786,7 +786,14 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       }
       solar.state.toBattery = battery.state.toBattery! - (grid.state.toBattery || 0);
     } else if (!solar.has && battery.has) {
+      // In the absence of solar production, the battery is the only energy producer
+      // besides the grid, so whatever was given to the grid must come from
+      // the battery
       battery.state.toGrid = grid.state.toGrid ?? 0;
+
+      // In the absence of solar production, what was consumed by the battery
+      // must come from the grid, since there are no other energy producers.
+      grid.state.toBattery = (battery.state.toBattery ?? 0);
     }
 
     // Update State Values of Solar to Grid
@@ -855,7 +862,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     const totalIndividualConsumption = coerceNumber(individual1.state, 0) + coerceNumber(individual2.state, 0);
 
     // Calculate Sum of All Sources to get Total Home Consumption
-    const totalHomeConsumption = Math.max(grid.state.fromGrid + (solar.state.toHome ?? 0) + (battery.state.toHome ?? 0), 0);
+    const totalHomeConsumption = Math.max(grid.state.fromGrid - (grid.state.toBattery ?? 0) + (solar.state.toHome ?? 0) + (battery.state.toHome ?? 0), 0);
 
     // Calculate Circumference of Semi-Circles
     let homeBatteryCircumference = 0;
