@@ -1,38 +1,23 @@
-import typescript from 'rollup-plugin-typescript2';
-import commonjs from 'rollup-plugin-commonjs';
-import nodeResolve from 'rollup-plugin-node-resolve';
-import babel from 'rollup-plugin-babel';
-import { terser } from 'rollup-plugin-terser';
-import serve from 'rollup-plugin-serve';
-import json from '@rollup/plugin-json';
+import babel from "@rollup/plugin-babel";
+import commonjs from "@rollup/plugin-commonjs";
+import json from "@rollup/plugin-json";
+import { nodeResolve } from "@rollup/plugin-node-resolve";
+import serve from "rollup-plugin-serve";
+import terser  from "@rollup/plugin-terser";
+import typescript from "@rollup/plugin-typescript";
 import minifyHTML from 'rollup-plugin-minify-html-literals';
 
 const dev = process.env.ROLLUP_WATCH;
 
-const serveopts = {
-  contentBase: ['./dist'],
-  host: '0.0.0.0',
+const serveOptions = {
+  contentBase: ["./dist"],
+  host: "0.0.0.0",
   port: 5000,
   allowCrossOrigin: true,
   headers: {
-    'Access-Control-Allow-Origin': '*',
+    "Access-Control-Allow-Origin": "*",
   },
 };
-
-const plugins = [
-  nodeResolve({}),
-  commonjs(),
-  typescript(),
-  json({
-    compact: true,
-  }),
-  babel({
-    exclude: 'node_modules/**',
-  }),
-  dev && serve(serveopts),
-  !dev && minifyHTML(),
-  !dev && terser({ output: { comments: false } }),
-];
 
 export default [
   {
@@ -44,7 +29,23 @@ export default [
         inlineDynamicImports: true,
       },
     ],
-    plugins: plugins,
+    plugins: [
+      minifyHTML(),
+      terser({ output: { comments: false } }),
+      typescript({
+        declaration: false,
+      }),
+      nodeResolve(),
+      json({
+        compact: true,
+      }),
+      commonjs(),
+      babel({
+        exclude: "node_modules/**",
+        babelHelpers: "bundled",
+      }),
+      ...(dev ? [serve(serveOptions)] : [terser()]),
+    ],
     moduleContext: (id) => {
       const thisAsWindowForModules = [
         "node_modules/@formatjs/intl-utils/lib/src/diff.js",

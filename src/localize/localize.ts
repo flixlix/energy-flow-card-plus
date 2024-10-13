@@ -1,5 +1,7 @@
+import * as cs from "./languages/cs.json";
 import * as en from "./languages/en.json";
 import * as de from "./languages/de.json";
+import * as dk from "./languages/dk.json";
 import * as pt from "./languages/pt-PT.json";
 import * as ptBR from "./languages/pt-BR.json";
 import * as es from "./languages/es.json";
@@ -9,10 +11,14 @@ import * as fr from "./languages/fr.json";
 import * as ru from "./languages/ru.json";
 import * as fi from "./languages/fi.json";
 import * as pl from "./languages/pl.json";
+import * as sk from "./languages/sk.json";
+import * as sv from "./languages/sv.json";
 
 const languages: Record<string, unknown> = {
+  cs,
   en,
   de,
+  dk,
   pt,
   pt_BR: ptBR,
   es,
@@ -22,6 +28,8 @@ const languages: Record<string, unknown> = {
   ru,
   fi,
   pl,
+  sk,
+  sv,
 };
 
 const defaultLang = "en";
