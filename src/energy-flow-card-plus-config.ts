@@ -16,6 +16,7 @@ interface mainConfigOptions {
   min_expected_energy?: number;
   display_zero_lines?: boolean;
   energy_date_selection?: boolean;
+  collection_key?: string;
   use_new_flow_rate_model?: boolean;
 }
 
