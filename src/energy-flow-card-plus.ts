@@ -274,6 +274,16 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     return `${v}${unitWhiteSpace === false ? '' : ' '}${unit || (isMwh ? 'MWh' : isKWh ? 'kWh' : 'Wh')}`;
   };
 
+  private shouldRenderSecondaryState(
+    value: number | string | null | undefined,
+    displayZero?: boolean,
+    displayZeroTolerance?: number,
+  ): boolean {
+    if (displayZero !== false) return true;
+    if (!isNumberValue(value)) return true;
+    return Math.abs(Number(value)) > (displayZeroTolerance ?? 0);
+  }
+
   private openDetails(event: { stopPropagation: any; key?: string }, entityId?: string | undefined): void {
     event.stopPropagation();
     if (!entityId || !this._config.clickable_entities) return;
@@ -440,7 +450,9 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         icon: entities.grid?.secondary_info?.icon,
         unit: entities.grid?.secondary_info?.unit_of_measurement,
         unit_white_space: entities.grid?.secondary_info?.unit_white_space,
+        displayZero: entities.grid?.secondary_info?.display_zero,
         decimals: entities.grid?.secondary_info?.decimals,
+        displayZeroTolerance: entities.grid?.secondary_info?.display_zero_tolerance,
         energyDateSelection: entities.grid?.secondary_info?.energy_date_selection || false,
         color: {
           type: entities.grid?.secondary_info?.color_value,
@@ -467,8 +479,10 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         state: initialSecondaryState,
         icon: entities.solar?.secondary_info?.icon,
         unit: entities.solar?.secondary_info?.unit_of_measurement,
+        displayZero: entities.solar?.secondary_info?.display_zero,
         decimals: entities.solar?.secondary_info?.decimals,
         unit_white_space: entities.solar?.secondary_info?.unit_white_space,
+        displayZeroTolerance: entities.solar?.secondary_info?.display_zero_tolerance,
         energyDateSelection: entities.solar?.secondary_info?.energy_date_selection || false,
       },
     };
@@ -518,7 +532,9 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         unit: entities.home?.secondary_info?.unit_of_measurement,
         unit_white_space: entities.home?.secondary_info?.unit_white_space,
         icon: entities.home?.secondary_info?.icon,
+        displayZero: entities.home?.secondary_info?.display_zero,
         decimals: entities.home?.secondary_info?.decimals,
+        displayZeroTolerance: entities.home?.secondary_info?.display_zero_tolerance,
         energyDateSelection: entities.home?.secondary_info?.energy_date_selection || false,
       },
     };
@@ -587,6 +603,8 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
         icon: entities.fossil_fuel_percentage?.secondary_info?.icon,
         unit: entities.fossil_fuel_percentage?.secondary_info?.unit_of_measurement,
         unit_white_space: entities.fossil_fuel_percentage?.secondary_info?.unit_white_space,
+        displayZero: entities.fossil_fuel_percentage?.secondary_info?.display_zero,
+        displayZeroTolerance: entities.fossil_fuel_percentage?.secondary_info?.display_zero_tolerance,
         color_value: entities.fossil_fuel_percentage?.secondary_info?.color_value,
         energyDateSelection: entities.fossil_fuel_percentage?.secondary_info?.energy_date_selection || false,
       },
@@ -1138,13 +1156,20 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     };
 
     const generalSecondarySpan = (field, key: string) => {
+      const passesDisplayZeroCheck = this.shouldRenderSecondaryState(
+        field.secondary.state,
+        field.secondary.displayZero,
+        field.secondary.displayZeroTolerance,
+      );
       return html` ${field.secondary.has || field.secondary.template
-        ? html` ${baseSecondarySpan({
-            className: key,
-            entityId: field.secondary.entity,
-            icon: field.secondary.icon,
-            value: this.displayValue(field.secondary.state, field.secondary.unit, field.secondary.unit_white_space, field?.secondary?.decimals),
-          })}`
+        ? passesDisplayZeroCheck
+          ? html` ${baseSecondarySpan({
+              className: key,
+              entityId: field.secondary.entity,
+              icon: field.secondary.icon,
+              value: this.displayValue(field.secondary.state, field.secondary.unit, field.secondary.unit_white_space, field?.secondary?.decimals),
+            })}`
+          : ''
         : ''}`;
     };
 
@@ -1152,11 +1177,11 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       const value = individual.secondary.has
         ? this.displayValue(individual.secondary.state, individual.secondary.unit, individual.secondary.unit_white_space)
         : undefined;
-      const passesDisplayZeroCheck =
-        individual.secondary.displayZero !== false ||
-        (isNumberValue(individual.secondary.state)
-          ? (Number(individual.secondary.state) ?? 0) > (individual.secondary.displayZeroTolerance ?? 0)
-          : true);
+      const passesDisplayZeroCheck = this.shouldRenderSecondaryState(
+        individual.secondary.state,
+        individual.secondary.displayZero,
+        individual.secondary.displayZeroTolerance,
+      );
       return html` ${individual.secondary.has && passesDisplayZeroCheck
         ? html`${baseSecondarySpan({
             className: key,
