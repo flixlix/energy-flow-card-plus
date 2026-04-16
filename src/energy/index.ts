@@ -102,11 +102,24 @@ export interface EnergyCollection extends Collection<EnergyData> {
   _active: number;
 }
 
-export const getEnergyDataCollection = (hass: HomeAssistant, key = '_energy'): EnergyCollection | null => {
-  if ((hass.connection as any)[key]) {
-    return (hass.connection as any)[key];
+export const getEnergyDataCollection = (hass: HomeAssistant, collectionKey?: string): EnergyCollection | null => {
+  const conn = hass.connection as any;
+  const panelUrl = (hass as any).panelUrl;
+
+  let key = '_energy';
+  if (collectionKey) {
+    key = `_${collectionKey}`;
+  } else if (panelUrl) {
+    key = `_energy_${panelUrl}`;
   }
-  // HA has not initialized the collection yet and we don't want to interfere with that
+
+  if (conn[key]) {
+    return conn[key];
+  }
+  // Fallback to the legacy key for older HA versions
+  if (key !== '_energy' && conn._energy) {
+    return conn._energy;
+  }
   return null;
 };
 

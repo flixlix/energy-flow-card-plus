@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { LitElement, html, TemplateResult, svg, PropertyValues } from 'lit';
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { customElement, property, query, state } from 'lit/decorators';
+import { customElement, property, query, state } from 'lit/decorators.js';
 import type { Config, EntityType, baseEntity } from './types';
 import localize from './localize/localize';
 import { coerceNumber, coerceStringArray, isNumberValue, renderError } from './utils';
@@ -59,11 +59,11 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
       resolve: (value: EnergyCollection | PromiseLike<EnergyCollection>) => void,
       reject: (reason?: any) => void,
     ) => {
-      const energyCollection = getEnergyDataCollection(this.hass);
+      const energyCollection = getEnergyDataCollection(this.hass, this._config?.collection_key);
       if (energyCollection) {
         resolve(energyCollection);
       } else if (Date.now() - start > energyDataTimeout) {
-        console.debug(getEnergyDataCollection(this.hass));
+        console.debug(getEnergyDataCollection(this.hass, this._config?.collection_key));
         reject(new Error('No energy data received. Make sure to add a `type: energy-date-selection` card to this screen.'));
       } else {
         setTimeout(() => getEnergyDataCollectionPoll(resolve, reject), 100);
@@ -73,7 +73,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     setTimeout(() => {
       if (!this.error && !Object.keys(this.states).length) {
         this.error = new Error('Something went wrong. No energy data received.');
-        console.debug(getEnergyDataCollection(this.hass));
+        console.debug(getEnergyDataCollection(this.hass, this._config?.collection_key));
       }
     }, energyDataTimeout * 2);
     energyPromise.catch(err => {
@@ -261,7 +261,7 @@ export default class EnergyFlowCardPlus extends SubscribeMixin(LitElement) {
     if (value === null) return '0';
     if (Number.isNaN(+value)) return value.toString();
     const valueInNumber = Number(value);
-    const isMwh = unit === undefined && valueInNumber * 1000 >= this._config!.kwh_mwh_threshold!;
+    const isMwh = unit === undefined && valueInNumber / 1000 >= this._config!.kwh_mwh_threshold!;
     const isKWh = unit === undefined && valueInNumber >= this._config!.wh_kwh_threshold!;
     const v = formatNumber(
       isMwh
