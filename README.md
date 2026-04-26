@@ -102,30 +102,31 @@ Else, if you prefer the graphical editor, use the menu to add the resource:
 
 #### Card options
 
-| Name                        | Type      |                 Default                  | Description                                                                                                                                                                                                              |
-| --------------------------- | --------- | :--------------------------------------: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| type                        | `string`  |               **required**               | `custom:energy-flow-card-plus`.                                                                                                                                                                                          |
-| entities                    | `object`  |               **required**               | One or more sensor entities, see [entities object](#entities-object) for additional entity options.                                                                                                                      |
-| title                       | `string`  |                                          | Shows a title at the top of the card.                                                                                                                                                                                    |
-| dashboard_link              | `string`  |                                          | Shows a link to an Energy Dashboard. Should be a url path to location of your choice. If you wanted to link to the built-in dashboard you would enter `/energy` for example.                                             |
-| dashboard_link_label        | `string`  | Go To Energy Dashboard (auto-translates) | If set, overrides the default link label to go to a different dashboard.                                                                                                                                                 |
-| second_dashboard_link       | `string`  |                                          | Shows another link to an Energy Dashboard. Should be a url path to location of your choice. If you wanted to link to the built-in dashboard you would enter `/energy` for example. (Only available in the YAML Editor)   |
-| second_dashboard_link_label | `string`  | Go To Energy Dashboard (auto-translates) | If set, overrides the second default link label to go to a different dashboard.                                                                                                                                          |
-| kw_decimals                 | `number`  |                    1                     | Number of decimals rounded to when kilowatt-hours are displayed.                                                                                                                                                         |
-| w_decimals                  | `number`  |                    1                     | Number of decimals rounded to when watt-hours are displayed.                                                                                                                                                             |
-| min_flow_rate               | `number`  |                   .75                    | Represents how much time it takes for the quickest dot to travel from one end to the other in seconds.                                                                                                                   |
-| max_flow_rate               | `number`  |                    6                     | Represents how much time it takes for the slowest dot to travel from one end to the other in seconds.                                                                                                                    |
-| watt_threshold              | `number`  |                    0                     | The number of Wh to display before converting to and displaying kWh. Setting of 0 will always display in kWh.                                                                                                            |
-| clickable_entities          | `boolean` |                  false                   | If true, clicking on the entity will open the entity's more info dialog.                                                                                                                                                 |
-| min_expected_power          | `number`  |                   0.01                   | Represents the minimum amount of energy (in Wh) expected to flow through the system for the selected period. Only used in the [New Flow Formula](#new-flow-formula).                                                     |
-| max_expected_power          | `number`  |                   2000                   | Represents the maximum amount of energy (in Wh) expected to flow through the system for the selected period. Only used in the [New Flow Formula](#new-flow-formula).                                                     |
-| display_zero_lines          | `object`  |             `{mode: "show"}`             | Check [Display Zero Lines](#display-zero-lines)                                                                                                                                                                          |
-| full_size                   | `boolean` |                  false                   | Warning: This option is experimental. To use this option, you must set your view to panel mode. If set to true, the card will take up the full height of the screen. And the Card should go to the center of the screen. |
-| style_ha_card               | `css`     |                                          | [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) Styling to apply to the container of the card (border and background of the card).                                                                               |
-| style_card_content          | `css`     |                                          | [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) Styling to apply to the content of the card (all circles and lines of the card).                                                                                 |
-| use_new_flow_rate_model     | `boolean` |                  false                   | If `true`, the card will use the [New Flow Formula](#new-flow-formula).                                                                                                                                                  |
-| sort_individual_devices     | `boolean` |           true (since v0.3.1)            | If `true`, sort devices in order of power consumption -> entity id -> alphabetically.                                                                                                                                    |
-| allow_layout_break          | `boolean` |                  false                   | Always allow up to 4 individual devices to show, even when there is not enough space, causing visual layout break.                                                                                                       |
+| Name                        | Type      |                 Default                  | Description                                                                                                                                                                                                                                                                                                                                    |
+| --------------------------- | --------- | :--------------------------------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| type                        | `string`  |               **required**               | `custom:energy-flow-card-plus`.                                                                                                                                                                                                                                                                                                                |
+| entities                    | `object`  |               **required**               | One or more sensor entities, see [entities object](#entities-object) for additional entity options.                                                                                                                                                                                                                                            |
+| title                       | `string`  |                                          | Shows a title at the top of the card.                                                                                                                                                                                                                                                                                                          |
+| dashboard_link              | `string`  |                                          | Shows a link to an Energy Dashboard. Should be a url path to location of your choice. If you wanted to link to the built-in dashboard you would enter `/energy` for example.                                                                                                                                                                   |
+| dashboard_link_label        | `string`  | Go To Energy Dashboard (auto-translates) | If set, overrides the default link label to go to a different dashboard.                                                                                                                                                                                                                                                                       |
+| second_dashboard_link       | `string`  |                                          | Shows another link to an Energy Dashboard. Should be a url path to location of your choice. If you wanted to link to the built-in dashboard you would enter `/energy` for example. (Only available in the YAML Editor)                                                                                                                         |
+| second_dashboard_link_label | `string`  | Go To Energy Dashboard (auto-translates) | If set, overrides the second default link label to go to a different dashboard.                                                                                                                                                                                                                                                                |
+| kilo_decimals               | `number`  |                    1                     | Number of decimals rounded to when kilowatt-hours are displayed.                                                                                                                                                                                                                                                                               |
+| base_decimals               | `number`  |                    1                     | Number of decimals rounded to when watt-hours are displayed.                                                                                                                                                                                                                                                                                   |
+| min_flow_rate               | `number`  |                   .75                    | Represents how much time it takes for the quickest dot to travel from one end to the other in seconds.                                                                                                                                                                                                                                         |
+| max_flow_rate               | `number`  |                    6                     | Represents how much time it takes for the slowest dot to travel from one end to the other in seconds.                                                                                                                                                                                                                                          |
+| kilo_threshold              | `number`  |                    0                     | The number of Wh to display before converting to and displaying kWh. Setting of 0 will always display in kWh.                                                                                                                                                                                                                                  |
+| clickable_entities          | `boolean` |                  false                   | If true, clicking on the entity will open the entity's more info dialog.                                                                                                                                                                                                                                                                       |
+| min_expected_power          | `number`  |                   0.01                   | Represents the minimum amount of energy (in Wh) expected to flow through the system for the selected period. Only used in the [New Flow Formula](#new-flow-formula).                                                                                                                                                                           |
+| max_expected_power          | `number`  |                   2000                   | Represents the maximum amount of energy (in Wh) expected to flow through the system for the selected period. Only used in the [New Flow Formula](#new-flow-formula).                                                                                                                                                                           |
+| display_zero_lines          | `object`  |             `{mode: "show"}`             | Check [Display Zero Lines](#display-zero-lines)                                                                                                                                                                                                                                                                                                |
+| full_size                   | `boolean` |                  false                   | Warning: This option is experimental. To use this option, you must set your view to panel mode. If set to true, the card will take up the full height of the screen. And the Card should go to the center of the screen.                                                                                                                       |
+| style_ha_card               | `css`     |                                          | [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) Styling to apply to the container of the card (border and background of the card).                                                                                                                                                                                                     |
+| style_card_content          | `css`     |                                          | [CSS](https://developer.mozilla.org/en-US/docs/Web/CSS) Styling to apply to the content of the card (all circles and lines of the card).                                                                                                                                                                                                       |
+| use_new_flow_rate_model     | `boolean` |                  false                   | If `true`, the card will use the [New Flow Formula](#new-flow-formula).                                                                                                                                                                                                                                                                        |
+| sort_individual_devices     | `boolean` |           true (since v0.3.1)            | If `true`, sort devices in order of power consumption -> entity id -> alphabetically.                                                                                                                                                                                                                                                          |
+| allow_layout_break          | `boolean` |                  false                   | Always allow up to 4 individual devices to show, even when there is not enough space, causing visual layout break.                                                                                                                                                                                                                             |
+| collection_key              | `string`  |                                          | Bind this card to a specific Home Assistant energy data collection. Defaults to the energy collection of the active dashboard. Pass the key (e.g. `energy_living_room`) of the dashboard whose selected period should drive this card. Useful when more than one energy dashboard exists. See [Energy Collection Key](#energy-collection-key). |
 
 #### Action Configuration
 
@@ -302,6 +303,24 @@ This feature allows you to configure how the card handles a Grid Power Outage sc
 | calculate_flow_rate | `boolean` or `number` | `false`                                                                                                                                                                                                                                                                                                |
 |                     |                       | If set to `true`, the flow rate will be calculated by using the flow rate formula (either the new or the old one, depending on your configuration). If set to a number, the flow rate will be set to that number. For example, defining the value `10` will ensure one dot will flow every 10 seconds. |
 
+#### Energy Collection Key
+
+This option lets you select which Home Assistant energy data collection drives the card. Home Assistant exposes one collection per energy dashboard, plus the default dashboard collection. Each collection has its own selected period (today, this week, custom range, etc.).
+
+By default, this card binds to the energy collection of whichever dashboard it is rendered inside (the same behavior as the built-in Energy Distribution card). If you have created additional energy dashboards (for example, one per area or one per house) and want this card to follow a specific dashboard's selected period instead of the active one, set `collection_key` to that dashboard's collection key.
+
+Collection keys follow the pattern `energy_<dashboard_url>`. For example, an energy dashboard at `/energy-living-room` exposes the collection key `energy_living_room`. Leave `collection_key` unset to use the default behavior.
+
+```yaml
+type: custom:energy-flow-card-plus
+collection_key: energy_living_room
+entities:
+  grid:
+    entity: sensor.grid_energy
+  solar:
+    entity: sensor.solar_energy
+```
+
 #### Display Zero Lines
 
 This object allows you to control the behavior of the flow lines that are inactive.
@@ -330,7 +349,7 @@ entities:
       entity: sensor.power_outage
     display_state: one_way
     color_circle: true
-watt_threshold: 10000
+kilo_threshold: 10000
 ```
 
 This should give you something like this:
@@ -378,7 +397,7 @@ entities:
     color_circle: true
   home:
     color_icon: true
-watt_threshold: 10000
+kilo_threshold: 10000
 ```
 
 This should give you something like this:
@@ -429,11 +448,11 @@ entities:
       display_zero: true
       color: "#ff8080"
       icon: mdi:motorbike-electric
-w_decimals: 0
-kw_decimals: 2
+base_decimals: 0
+kilo_decimals: 2
 min_flow_rate: 0.9
 max_flow_rate: 6
-watt_threshold: 10000
+kilo_threshold: 10000
 clickable_entities: true
 title: Energy Flow Card Plus
 ```
