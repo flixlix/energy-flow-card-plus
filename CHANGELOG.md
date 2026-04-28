@@ -1,5 +1,16 @@
 # energy-flow-card-plus
 
+## 0.2.3
+
+### Patch Changes
+
+- [#251](https://github.com/flixlix/flixlix-cards/pull/251) [`59ec2b7`](https://github.com/flixlix/flixlix-cards/commit/59ec2b72f4ed12702af89ada19db5d78e146c2ee) Thanks [@flixlix](https://github.com/flixlix)! - refactor: extract ui-editor into shared package
+
+- [#253](https://github.com/flixlix/flixlix-cards/pull/253) [`0b0f01b`](https://github.com/flixlix/flixlix-cards/commit/0b0f01bc0ac856a39b8b133b7de25dab5dbae495) Thanks [@flixlix](https://github.com/flixlix)! - fix: battery in & out swap
+
+- Updated dependencies [[`59ec2b7`](https://github.com/flixlix/flixlix-cards/commit/59ec2b72f4ed12702af89ada19db5d78e146c2ee), [`378c6e1`](https://github.com/flixlix/flixlix-cards/commit/378c6e10b9d9860ff4f2621f869f1fd82f7cda0b), [`cab9296`](https://github.com/flixlix/flixlix-cards/commit/cab92965b23aff7f66952fda8f862cc48485e0ad), [`a942417`](https://github.com/flixlix/flixlix-cards/commit/a94241772bef92995336ea65f61ea2a342ffc13f), [`1fbf1d7`](https://github.com/flixlix/flixlix-cards/commit/1fbf1d786bfe27e8ce0fe1778970217063c38c49)]:
+  - @flixlix-cards/shared@0.0.5
+
 ## 0.2.2
 
 ### Patch Changes
